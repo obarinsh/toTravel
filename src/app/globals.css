@@ -1,26 +1,163 @@
 @import "tailwindcss";
 
+/* ToTravel Brand - Quiet Luxury / Warm Minimalism */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Core palette */
+  --background: #FDFCF7;        /* Buttery cream */
+  --foreground: #1A1A1A;        /* Deep charcoal with warm undertones */
+  --primary: #94A3B8;           /* Muted dusty sky blue */
+  --primary-light: #A5B4FC;     /* Lighter sky blue */
+  --primary-dark: #64748B;      /* Darker muted blue */
+  --secondary: #F59E0B;         /* Honey gold for highlights */
+  --secondary-light: #FCD34D;   /* Lighter honey */
+  --accent: #F59E0B;            /* Same as secondary for consistency */
+  --card: #FFFFFF;
+  --border: #E5E2D9;            /* Warm border */
+  --muted: #78716C;             /* Warm gray for muted text */
+  
+  /* Glassmorphism */
+  --glass-light: rgba(255, 255, 255, 0.05);
+  --glass-dark: rgba(0, 0, 0, 0.2);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-primary: var(--primary);
+  --color-primary-light: var(--primary-light);
+  --color-primary-dark: var(--primary-dark);
+  --color-secondary: var(--secondary);
+  --color-secondary-light: var(--secondary-light);
+  --color-accent: var(--accent);
+  --color-card: var(--card);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --font-heading: var(--font-instrument-sans);
+  --font-body: var(--font-inter);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #1A1A1A;
+    --foreground: #FDFCF7;
+    --primary: #A5B4FC;
+    --primary-light: #C7D2FE;
+    --primary-dark: #94A3B8;
+    --secondary: #F59E0B;
+    --secondary-light: #FCD34D;
+    --card: #262626;
+    --border: #3D3D3D;
+    --muted: #A8A29E;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body), system-ui, sans-serif;
+  line-height: 1.6;
+}
+
+/* Heading styles */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading), system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* Premium label style */
+.label-premium {
+  text-transform: uppercase;
+  letter-spacing: 0.4em;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+/* Generous rounded corners */
+.rounded-card {
+  border-radius: 2rem;
+}
+
+/* Soft warm shadows */
+.shadow-warm {
+  box-shadow: 0 25px 50px -12px rgba(26, 26, 26, 0.05);
+}
+
+.shadow-warm-lg {
+  box-shadow: 0 35px 60px -15px rgba(26, 26, 26, 0.08);
+}
+
+/* Glassmorphism utility */
+.glass {
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  background: var(--glass-light);
+}
+
+.glass-dark {
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  background: var(--glass-dark);
+}
+
+/* Leaflet map container */
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+  border-radius: 2rem;
+}
+
+/* Custom marker styles */
+.custom-marker {
+  background: var(--primary);
+  color: white;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+  border: 3px solid white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.custom-marker.hotel {
+  background: var(--secondary);
+}
+
+/* Drag and drop styles */
+.dragging {
+  opacity: 0.6;
+  transform: scale(1.02);
+}
+
+.drag-overlay {
+  box-shadow: 0 20px 60px rgba(26, 26, 26, 0.12);
+}
+
+/* Smooth scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
+/* Selection color */
+::selection {
+  background: var(--primary-light);
+  color: var(--foreground);
 }

@@ -1,65 +1,196 @@
-import Image from "next/image";
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { motion } from 'motion/react';
+import { Sparkles, Map, GripVertical, ArrowRight, Loader2 } from 'lucide-react';
+import SearchBar from '@/components/SearchBar';
+import { GeocodingResult, Coordinates } from '@/types';
 
 export default function Home() {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedDestination, setSelectedDestination] = useState<{
+    name: string;
+    coordinates: Coordinates;
+  } | null>(null);
+
+  const handleDestinationSelect = (result: GeocodingResult) => {
+    setSelectedDestination({
+      name: result.display_name.split(',')[0],
+      coordinates: {
+        lat: parseFloat(result.lat),
+        lng: parseFloat(result.lon),
+      },
+    });
+  };
+
+  const handlePlanTrip = async () => {
+    if (!selectedDestination) return;
+
+    setIsLoading(true);
+
+    try {
+      // Generate attractions
+      const attractionsResponse = await fetch('/api/attractions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          destination: selectedDestination.name,
+          destinationCoordinates: selectedDestination.coordinates,
+        }),
+      });
+
+      const { attractions } = await attractionsResponse.json();
+
+      if (!attractions || attractions.length === 0) {
+        throw new Error('No attractions generated');
+      }
+
+      // Save trip to database
+      const tripResponse = await fetch('/api/trips', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          destination: selectedDestination.name,
+          destination_coordinates: selectedDestination.coordinates,
+          attractions,
+        }),
+      });
+
+      const { trip } = await tripResponse.json();
+
+      // Navigate to trip page
+      router.push(`/trip/${trip.id}`);
+    } catch (error) {
+      console.error('Error planning trip:', error);
+      alert('Failed to plan trip. Please check your API keys and try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div className="flex flex-col items-center justify-center min-h-[70vh] py-16">
+      {/* Hero Section */}
+      <motion.div 
+        className="text-center mb-16"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+      >
+        <p className="label-premium text-muted mb-6">Your Journey Begins Here</p>
+        <h1 className="font-heading text-5xl md:text-6xl font-semibold text-foreground mb-6 tracking-tight">
+          Plan Your Perfect Trip
+        </h1>
+        <p className="text-lg text-muted max-w-xl mx-auto font-body font-light leading-relaxed">
+          Enter a destination and let AI discover the top attractions.
+          Create your perfect itinerary with intuitive drag and drop.
+        </p>
+      </motion.div>
+
+      {/* Search Section */}
+      <motion.div 
+        className="w-full max-w-2xl space-y-8"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+      >
+        <SearchBar
+          onSelect={handleDestinationSelect}
+          placeholder="Where do you want to go?"
+          disabled={isLoading}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+
+        {selectedDestination && (
+          <motion.div 
+            className="bg-card border border-border rounded-[2rem] p-6 shadow-warm"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="label-premium text-muted mb-1">Selected Destination</p>
+                <p className="font-heading text-2xl font-semibold text-foreground">
+                  {selectedDestination.name}
+                </p>
+              </div>
+              <button
+                onClick={handlePlanTrip}
+                disabled={isLoading}
+                className="group flex items-center gap-3 px-8 py-4 bg-primary text-white rounded-[2rem] hover:bg-primary-dark hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 size={20} className="animate-spin" />
+                    <span className="font-body font-medium">Planning...</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="font-body font-medium">Start Planning</span>
+                    <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform duration-300" />
+                  </>
+                )}
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {isLoading && (
+          <motion.div 
+            className="text-center py-8"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
           >
-            Documentation
-          </a>
-        </div>
-      </main>
+            <p className="text-muted font-body font-light">Generating top attractions and mapping coordinates...</p>
+            <p className="text-sm text-muted/60 mt-2 font-body">This may take 15-30 seconds</p>
+          </motion.div>
+        )}
+      </motion.div>
+
+      {/* Feature Cards */}
+      <motion.div 
+        className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl w-full"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
+      >
+        {[
+          {
+            icon: Sparkles,
+            title: "AI-Powered",
+            description: "Get personalized recommendations for any destination worldwide"
+          },
+          {
+            icon: Map,
+            title: "Interactive Map",
+            description: "See all attractions on a map and visualize your route"
+          },
+          {
+            icon: GripVertical,
+            title: "Drag & Drop",
+            description: "Easily reorder your itinerary by dragging attractions"
+          }
+        ].map((feature, index) => (
+          <motion.div 
+            key={feature.title}
+            className="group text-center p-8 rounded-[2rem] bg-card border border-border/50 hover:border-border hover:shadow-warm transition-all duration-500"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: "easeOut", delay: 0.5 + index * 0.1 }}
+            whileHover={{ scale: 1.02 }}
+          >
+            <div className="w-14 h-14 bg-secondary/10 text-secondary rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-[1.05] transition-transform duration-300">
+              <feature.icon size={24} strokeWidth={1.5} />
+            </div>
+            <h3 className="font-heading font-semibold text-lg mb-3 text-foreground">{feature.title}</h3>
+            <p className="text-muted text-sm font-body font-light leading-relaxed">
+              {feature.description}
+            </p>
+          </motion.div>
+        ))}
+      </motion.div>
     </div>
   );
 }
