@@ -1,15 +1,24 @@
-import { createClient } from '@supabase/supabase-js';
+import { createBrowserClient } from '@supabase/ssr';
 import { Trip } from '@/types';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);
+
+// Get current user ID helper
+async function getCurrentUserId(): Promise<string | null> {
+  const { data: { user } } = await supabase.auth.getUser();
+  return user?.id || null;
+}
 
 export async function saveTrip(trip: Omit<Trip, 'id' | 'created_at' | 'updated_at'>): Promise<Trip> {
+  const userId = await getCurrentUserId();
+  
   const { data, error } = await supabase
     .from('trips')
     .insert([{
+      user_id: userId,
       name: trip.name,
       destination: trip.destination,
       destination_coordinates: trip.destination_coordinates,
@@ -53,9 +62,17 @@ export async function getTrip(id: string): Promise<Trip | null> {
 }
 
 export async function getAllTrips(): Promise<Trip[]> {
+  const userId = await getCurrentUserId();
+  
+  // If no user is logged in, return empty array
+  if (!userId) {
+    return [];
+  }
+  
   const { data, error } = await supabase
     .from('trips')
     .select('*')
+    .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
   if (error) throw error;

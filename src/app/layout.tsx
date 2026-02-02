@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import Header from "@/components/Header";
+import { AuthProvider } from "@/contexts/AuthContext";
 import "./globals.css";
 
 const inter = Inter({
@@ -38,24 +39,26 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${playfair.variable} antialiased min-h-screen flex flex-col`}
       >
-        <Header />
+        <AuthProvider>
+          <Header />
 
-        {/* Main Content */}
-        <main className="flex-1 w-full">
-          {children}
-        </main>
+          {/* Main Content */}
+          <main className="flex-1 w-full">
+            {children}
+          </main>
 
-        {/* Minimal Footer */}
-        <footer className="py-12 px-6 md:px-12 lg:px-16 border-t border-moss-light">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <span className="text-sm text-mist">© 2025 toTravel</span>
-            <div className="flex gap-8">
-              <span className="text-sm cursor-pointer hover:opacity-70 transition-opacity text-mist">About</span>
-              <span className="text-sm cursor-pointer hover:opacity-70 transition-opacity text-mist">Privacy</span>
-              <span className="text-sm cursor-pointer hover:opacity-70 transition-opacity text-mist">Terms</span>
+          {/* Minimal Footer */}
+          <footer className="py-12 px-6 md:px-12 lg:px-16 border-t border-moss-light">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <span className="text-sm text-mist">© 2025 toTravel</span>
+              <div className="flex gap-8">
+                <span className="text-sm cursor-pointer hover:opacity-70 transition-opacity text-mist">About</span>
+                <span className="text-sm cursor-pointer hover:opacity-70 transition-opacity text-mist">Privacy</span>
+                <span className="text-sm cursor-pointer hover:opacity-70 transition-opacity text-mist">Terms</span>
+              </div>
             </div>
-          </div>
-        </footer>
+          </footer>
+        </AuthProvider>
       </body>
     </html>
   );

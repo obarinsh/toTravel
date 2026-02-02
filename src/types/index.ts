@@ -16,6 +16,7 @@ export interface Attraction {
 
 export interface Trip {
   id: string;
+  user_id?: string | null; // Reference to auth.users
   name?: string;
   destination: string;
   destination_coordinates: Coordinates;

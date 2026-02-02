@@ -1,22 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { saveTrip, getAllTrips, updateTrip, deleteTrip, getTrip } from '@/lib/supabase';
+import { createServerSupabaseClient, getServerUser } from '@/lib/supabase-server';
+import { Trip } from '@/types';
 
 // GET all trips or single trip by id
 export async function GET(request: NextRequest) {
   try {
+    const supabase = await createServerSupabaseClient();
+    const user = await getServerUser();
     const searchParams = request.nextUrl.searchParams;
     const id = searchParams.get('id');
 
     if (id) {
-      const trip = await getTrip(id);
-      if (!trip) {
+      const { data: trip, error } = await supabase
+        .from('trips')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (error || !trip) {
         return NextResponse.json({ error: 'Trip not found' }, { status: 404 });
       }
       return NextResponse.json({ trip });
     }
 
-    const trips = await getAllTrips();
-    return NextResponse.json({ trips });
+    // Get trips for current user only
+    if (!user) {
+      return NextResponse.json({ trips: [] });
+    }
+
+    const { data: trips, error } = await supabase
+      .from('trips')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return NextResponse.json({ trips: trips || [] });
   } catch (error) {
     console.error('Error fetching trips:', error);
     return NextResponse.json(
@@ -29,8 +48,24 @@ export async function GET(request: NextRequest) {
 // POST create new trip
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createServerSupabaseClient();
+    const user = await getServerUser();
     const body = await request.json();
-    const trip = await saveTrip(body);
+    
+    const { data: trip, error } = await supabase
+      .from('trips')
+      .insert([{
+        user_id: user?.id || null,
+        name: body.name,
+        destination: body.destination,
+        destination_coordinates: body.destination_coordinates,
+        attractions: body.attractions || [],
+        hotel_location: body.hotel_location,
+      }])
+      .select()
+      .single();
+
+    if (error) throw error;
     return NextResponse.json({ trip });
   } catch (error) {
     console.error('Error saving trip:', error);
@@ -44,6 +79,7 @@ export async function POST(request: NextRequest) {
 // PUT update existing trip
 export async function PUT(request: NextRequest) {
   try {
+    const supabase = await createServerSupabaseClient();
     const { id, ...updates } = await request.json();
     
     if (!id) {
@@ -53,7 +89,17 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const trip = await updateTrip(id, updates);
+    const { data: trip, error } = await supabase
+      .from('trips')
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
     return NextResponse.json({ trip });
   } catch (error) {
     console.error('Error updating trip:', error);
@@ -67,6 +113,7 @@ export async function PUT(request: NextRequest) {
 // DELETE trip
 export async function DELETE(request: NextRequest) {
   try {
+    const supabase = await createServerSupabaseClient();
     const searchParams = request.nextUrl.searchParams;
     const id = searchParams.get('id');
 
@@ -77,7 +124,12 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    await deleteTrip(id);
+    const { error } = await supabase
+      .from('trips')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error deleting trip:', error);
