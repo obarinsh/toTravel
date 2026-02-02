@@ -18,24 +18,7 @@ interface SuggestionsPanelProps {
   onRemoveAttraction?: (id: string) => void;
 }
 
-// Map attraction types to emojis
-const typeEmojis: Record<string, string> = {
-  'Nature': '🏞️',
-  'Historic': '🏛️',
-  'Park': '⛵',
-  'Landmark': '🗼',
-  'Food': '🍦',
-  'Shopping': '🛍️',
-  'Museum': '🎨',
-  'Beach': '🏖️',
-  'Entertainment': '🎭',
-  'Religious': '⛪',
-  'Architecture': '🏰',
-  'Garden': '🌸',
-  'Default': '📍',
-};
-
-// Try to determine type from description/name
+// Get place type from description
 function getPlaceType(attraction: Attraction): string {
   const text = `${attraction.name} ${attraction.description}`.toLowerCase();
   
@@ -50,16 +33,6 @@ function getPlaceType(attraction: Attraction): string {
   if (text.includes('historic') || text.includes('monument') || text.includes('memorial')) return 'Historic';
   
   return 'Landmark';
-}
-
-function getEmoji(attraction: Attraction): string {
-  const type = getPlaceType(attraction);
-  return typeEmojis[type] || typeEmojis['Default'];
-}
-
-function getDuration(): string {
-  const durations = ['1-2 hrs', '2-3 hrs', '3-4 hrs', 'Half day', 'Full day'];
-  return durations[Math.floor(Math.random() * 3)]; // Mostly shorter durations
 }
 
 export default function SuggestionsPanel({
@@ -92,8 +65,8 @@ export default function SuggestionsPanel({
       className={`
         ${isCollapsed ? 'w-14' : 'w-80'} 
         bg-card border-r border-border/50 flex flex-col transition-all duration-300 flex-shrink-0 h-full
-        ${isOver ? 'bg-secondary/5' : ''}
       `}
+      style={isOver ? { backgroundColor: 'rgba(92, 107, 74, 0.05)' } : undefined}
     >
       {/* Panel Header */}
       <div className="p-4 border-b border-border/30 flex items-center justify-between">
@@ -133,9 +106,10 @@ export default function SuggestionsPanel({
                   onClick={() => setActiveFilter(filter)}
                   className={`px-2.5 py-1 text-xs rounded-full transition-all duration-300 ${
                     activeFilter === filter
-                      ? 'bg-secondary text-white shadow-warm'
-                      : 'bg-background text-muted hover:bg-primary/10 hover:text-foreground border border-border/50'
+                      ? 'text-white shadow-warm'
+                      : 'bg-background text-muted hover:text-foreground border border-border/50'
                   }`}
+                  style={activeFilter === filter ? { backgroundColor: '#5C6B4A' } : { ':hover': { backgroundColor: '#E8EBE3' } } as React.CSSProperties}
                 >
                   {filter}
                 </button>
@@ -157,9 +131,6 @@ export default function SuggestionsPanel({
                   >
                     <SortablePlaceCard
                       attraction={attraction}
-                      emoji={getEmoji(attraction)}
-                      type={getPlaceType(attraction)}
-                      duration={getDuration()}
                       isActive={selectedAttractionId === attraction.id}
                       onClick={() => onSelectAttraction(attraction.id)}
                     />
@@ -170,7 +141,7 @@ export default function SuggestionsPanel({
                   <div className="text-center py-8 text-muted text-sm font-body font-light">
                     <Package size={32} className="mx-auto mb-3 opacity-40" strokeWidth={1} />
                     {attractions.length === 0 
-                      ? 'All places assigned! 🎉' 
+                      ? 'All places assigned!' 
                       : 'No matches for this filter'}
                   </div>
                 )}

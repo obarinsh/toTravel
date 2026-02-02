@@ -9,15 +9,16 @@ interface SearchBarProps {
   onSelect: (result: GeocodingResult) => void;
   placeholder?: string;
   disabled?: boolean;
+  variant?: 'default' | 'hero';
 }
 
-export default function SearchBar({ onSelect, placeholder = 'Search for a destination...', disabled = false }: SearchBarProps) {
+export default function SearchBar({ onSelect, placeholder = 'Search for a destination...', disabled = false, variant = 'default' }: SearchBarProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<GeocodingResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const debounceRef = useRef<NodeJS.Timeout>();
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -68,24 +69,45 @@ export default function SearchBar({ onSelect, placeholder = 'Search for a destin
     onSelect(result);
   };
 
+  const isHero = variant === 'hero';
+
   return (
     <div className="relative w-full" ref={dropdownRef}>
       <div className="relative">
-        <div className="absolute left-6 top-1/2 -translate-y-1/2 text-muted">
-          <Search size={20} strokeWidth={1.5} />
-        </div>
+        {!isHero && (
+          <div className="absolute left-6 top-1/2 -translate-y-1/2 text-muted">
+            <Search size={20} strokeWidth={1.5} />
+          </div>
+        )}
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={placeholder}
           disabled={disabled}
-          className="w-full pl-14 pr-14 py-5 text-lg font-body font-light border border-border rounded-[2rem] bg-card focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-warm placeholder:text-muted/60"
+          className={isHero 
+            ? "w-full pl-6 pr-16 py-5 rounded-full backdrop-blur-md text-base focus:outline-none font-light tracking-wide"
+            : "w-full pl-14 pr-14 py-5 text-lg font-body font-light border border-border rounded-[2rem] bg-card focus:outline-none focus:ring-2 focus:ring-secondary/30 focus:border-secondary/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-warm placeholder:text-muted/60"
+          }
+          style={isHero ? { 
+            backgroundColor: 'rgba(255, 255, 255, 0.14)',
+            color: '#FFFFFF',
+          } : undefined}
         />
-        {isLoading && (
-          <div className="absolute right-6 top-1/2 -translate-y-1/2 text-primary">
+        {isLoading ? (
+          <div className={`absolute top-1/2 -translate-y-1/2 ${isHero ? 'right-5' : 'right-6'}`} style={{ color: '#5C6B4A' }}>
             <Loader2 size={20} className="animate-spin" strokeWidth={1.5} />
           </div>
+        ) : isHero && (
+          <button 
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full flex items-center justify-center transition-all hover:scale-105"
+            style={{ backgroundColor: '#E4B84A' }}
+            onClick={() => {}}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="#4A4F45" strokeWidth={2.5} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            </svg>
+          </button>
         )}
       </div>
 
@@ -109,7 +131,7 @@ export default function SearchBar({ onSelect, placeholder = 'Search for a destin
                   onClick={() => handleSelect(result)}
                   className="w-full px-6 py-4 text-left hover:bg-background transition-colors duration-200 border-b border-border/50 last:border-b-0 group flex items-start gap-4"
                 >
-                  <div className="mt-1 text-muted group-hover:text-secondary transition-colors duration-200">
+                  <div className="mt-1 text-muted transition-colors duration-200" style={{ '--hover-color': '#5C6B4A' } as React.CSSProperties}>
                     <MapPin size={18} strokeWidth={1.5} />
                   </div>
                   <div>

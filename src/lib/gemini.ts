@@ -5,8 +5,9 @@ console.log('Gemini API Key loaded:', apiKey ? `${apiKey.substring(0, 10)}...` :
 
 const genAI = new GoogleGenerativeAI(apiKey);
 
+// Use gemini-1.5-flash which is stable and widely available
 export const geminiModel = genAI.getGenerativeModel({ 
-  model: 'gemini-2.5-flash',
+  model: 'gemini-1.5-flash',
 });
 
 export async function generateAttractions(destination: string): Promise<{
@@ -116,6 +117,14 @@ Provide a helpful, concise response. If asked about locations (restaurants, shop
 
 Keep your response under 300 words and be practical and actionable.`;
 
-  const result = await geminiModel.generateContent(prompt);
-  return result.response.text();
+  try {
+    const result = await geminiModel.generateContent(prompt);
+    return result.response.text();
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    if (errorMessage.includes('429') || errorMessage.includes('quota') || errorMessage.includes('rate')) {
+      throw new Error('API rate limit reached. Please wait a moment and try again.');
+    }
+    throw error;
+  }
 }

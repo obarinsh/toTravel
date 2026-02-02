@@ -97,7 +97,8 @@ export default function QueryChat({ destination, hotelLocation }: QueryChatProps
         {!isOpen && (
           <motion.button
             onClick={() => setIsOpen(true)}
-            className="fixed bottom-8 right-8 w-16 h-16 bg-secondary text-white rounded-[2rem] shadow-warm-lg flex items-center justify-center z-40"
+            className="fixed bottom-8 right-8 w-16 h-16 text-white rounded-[2rem] shadow-warm-lg flex items-center justify-center z-40"
+            style={{ backgroundColor: '#5C6B4A' }}
             title={`Ask about ${destination}`}
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -122,13 +123,13 @@ export default function QueryChat({ destination, hotelLocation }: QueryChatProps
             transition={{ duration: 0.4, ease: "easeOut" }}
           >
             {/* Header */}
-            <div className="p-5 border-b border-border/50 flex items-center justify-between bg-foreground text-background rounded-t-[2rem]">
+            <div className="p-5 border-b border-border/50 flex items-center justify-between text-white rounded-t-[2rem]" style={{ backgroundColor: '#5C6B4A' }}>
               <div>
                 <h3 className="font-heading font-semibold flex items-center gap-2">
                   <MessageCircle size={18} strokeWidth={1.5} />
                   Ask about {destination}
                 </h3>
-                <p className="text-sm text-background/70 font-body font-light mt-0.5">
+                <p className="text-sm text-white/70 font-body font-light mt-0.5">
                   Restaurants, activities, tips...
                 </p>
               </div>
@@ -144,8 +145,8 @@ export default function QueryChat({ destination, hotelLocation }: QueryChatProps
             <div className="flex-1 overflow-y-auto p-5 space-y-4 min-h-[220px] max-h-[320px]">
               {messages.length === 0 ? (
                 <div className="text-center text-muted py-12">
-                  <div className="w-14 h-14 bg-secondary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <MessageCircle size={24} className="text-secondary" strokeWidth={1} />
+                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: 'rgba(92, 107, 74, 0.1)' }}>
+                    <MessageCircle size={24} style={{ color: '#5C6B4A' }} strokeWidth={1} />
                   </div>
                   <p className="font-heading font-medium text-foreground mb-1">Ask me anything about {destination}</p>
                   <p className="text-xs font-body font-light">e.g., &quot;Best local restaurants&quot; or &quot;Things to do at night&quot;</p>
@@ -156,11 +157,12 @@ export default function QueryChat({ destination, hotelLocation }: QueryChatProps
                     key={index}
                     className={`${
                       message.role === 'user'
-                        ? 'ml-auto bg-foreground text-background'
+                        ? 'ml-auto text-white'
                         : 'bg-background'
                     } rounded-[1.5rem] p-4 max-w-[85%] ${
                       message.role === 'user' ? 'rounded-br-lg' : 'rounded-bl-lg'
                     }`}
+                    style={message.role === 'user' ? { backgroundColor: '#5C6B4A' } : undefined}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3 }}
@@ -204,7 +206,8 @@ export default function QueryChat({ destination, hotelLocation }: QueryChatProps
                 <motion.button
                   type="submit"
                   disabled={isLoading || !input.trim()}
-                  className="p-3 bg-secondary text-white rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-300"
+                  className="p-3 text-white rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-300"
+                  style={{ backgroundColor: '#5C6B4A' }}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >

@@ -69,10 +69,10 @@ function AttractionCardContent({
       }}
     >
       {/* Background Image */}
-      <div className="absolute inset-0 bg-foreground/10">
+      <div className="absolute inset-0 bg-moss-light">
         {imageLoading ? (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-primary/20 to-primary/40">
-            <ImageIcon size={40} className="text-primary/40 animate-pulse" strokeWidth={1} />
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-secondary/20 to-secondary/40">
+            <ImageIcon size={40} className="text-secondary/40 animate-pulse" strokeWidth={1} />
           </div>
         ) : imageUrl && !imageError ? (
           <img
@@ -82,7 +82,7 @@ function AttractionCardContent({
             onError={() => setImageError(true)}
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-primary/30 to-primary/60" />
+          <div className="w-full h-full bg-gradient-to-br from-secondary/30 to-secondary/60" />
         )}
         {/* Elegant gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10" />

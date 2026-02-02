@@ -1,22 +1,29 @@
 @import "tailwindcss";
 
-/* ToTravel Brand - Quiet Luxury / Warm Minimalism */
+/* ToTravel Brand - Moss / Editorial */
 :root {
-  /* Core palette */
-  --background: #FDFCF7;        /* Buttery cream */
-  --foreground: #1A1A1A;        /* Deep charcoal with warm undertones */
-  --primary: #94A3B8;           /* Muted dusty sky blue */
-  --primary-light: #A5B4FC;     /* Lighter sky blue */
-  --primary-dark: #64748B;      /* Darker muted blue */
-  --secondary: #F59E0B;         /* Honey gold for highlights */
-  --secondary-light: #FCD34D;   /* Lighter honey */
-  --accent: #F59E0B;            /* Same as secondary for consistency */
-  --card: #FFFFFF;
-  --border: #E5E2D9;            /* Warm border */
-  --muted: #78716C;             /* Warm gray for muted text */
+  /* Core palette - inspired by Scottish highlands */
+  --background: #FAFAF8;        /* Warm cream */
+  --foreground: #4A4F45;        /* Dark stone */
+  --primary: #E4B84A;           /* Sunny lemon - accent */
+  --primary-light: #EFC86A;     /* Lighter lemon */
+  --primary-dark: #C9A03D;      /* Darker lemon */
+  --secondary: #5C6B4A;         /* Mossy green */
+  --secondary-light: #6B7A59;   /* Lighter moss */
+  --accent: #E4B84A;            /* Same as primary */
+  --card: #FFFFFF;              /* Pure white cards */
+  --border: #E8EBE3;            /* Light moss tint */
+  --border-light: #F0F2ED;      /* Even lighter */
+  --muted: #8B9082;             /* Misty grey-green */
+  --muted-dark: #6B6B65;        /* Warm neutral grey */
+  --moss: #5C6B4A;              /* Mossy green */
+  --moss-light: #E8EBE3;        /* Light moss tint */
+  --stone: #4A4F45;             /* Dark stone */
+  --mist: #8B9082;              /* Misty grey-green */
+  --cloud: #C5C7C0;             /* Overcast sky */
   
   /* Glassmorphism */
-  --glass-light: rgba(255, 255, 255, 0.05);
+  --glass-light: rgba(255, 255, 255, 0.9);
   --glass-dark: rgba(0, 0, 0, 0.2);
 }
 
@@ -31,51 +38,60 @@
   --color-accent: var(--accent);
   --color-card: var(--card);
   --color-border: var(--border);
+  --color-border-light: var(--border-light);
   --color-muted: var(--muted);
-  --font-heading: var(--font-instrument-sans);
+  --color-muted-dark: var(--muted-dark);
+  --color-moss: var(--moss);
+  --color-moss-light: var(--moss-light);
+  --color-stone: var(--stone);
+  --color-mist: var(--mist);
+  --color-cloud: var(--cloud);
+  --font-heading: var(--font-playfair);
   --font-body: var(--font-inter);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #1A1A1A;
-    --foreground: #FDFCF7;
-    --primary: #A5B4FC;
-    --primary-light: #C7D2FE;
-    --primary-dark: #94A3B8;
-    --secondary: #F59E0B;
-    --secondary-light: #FCD34D;
+    --foreground: #FAFAF8;
+    --primary: #E4B84A;
+    --primary-light: #EFC86A;
+    --primary-dark: #C9A03D;
+    --secondary: #6B7A59;
+    --secondary-light: #7A8968;
     --card: #262626;
     --border: #3D3D3D;
-    --muted: #A8A29E;
+    --border-light: #333333;
+    --muted: #9A9A9A;
+    --muted-dark: #ABABAB;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-body), system-ui, sans-serif;
+  font-family: var(--font-inter), 'Inter', system-ui, sans-serif;
   line-height: 1.6;
 }
 
 /* Heading styles */
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-heading), system-ui, sans-serif;
-  font-weight: 600;
-  letter-spacing: -0.02em;
+  font-family: var(--font-inter), 'Inter', system-ui, sans-serif;
+  font-weight: 500;
+  letter-spacing: -0.01em;
 }
 
-/* Premium label style */
+/* Label style - minimal uppercase */
 .label-premium {
   text-transform: uppercase;
-  letter-spacing: 0.4em;
-  font-size: 10px;
+  letter-spacing: 0.1em;
+  font-size: 11px;
   font-weight: 500;
 }
 
-/* Generous rounded corners */
+/* Rounded corners - more minimal */
 .rounded-card {
-  border-radius: 2rem;
+  border-radius: 1rem;
 }
 
 /* Soft warm shadows */
@@ -100,31 +116,37 @@ h1, h2, h3, h4, h5, h6 {
   background: var(--glass-dark);
 }
 
+/* Hero search bar placeholder */
+input[style*="rgba(255, 255, 255"]::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
 /* Leaflet map container */
 .leaflet-container {
   height: 100%;
   width: 100%;
-  border-radius: 2rem;
+  border-radius: 1rem;
 }
 
 /* Custom marker styles */
 .custom-marker {
-  background: var(--primary);
+  background: var(--foreground);
   color: white;
   border-radius: 50%;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 600;
-  font-size: 14px;
-  border: 3px solid white;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  font-weight: 500;
+  font-size: 12px;
+  border: 2px solid white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .custom-marker.hotel {
-  background: var(--secondary);
+  background: var(--primary);
+  color: var(--foreground);
 }
 
 /* Drag and drop styles */
@@ -158,6 +180,44 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Selection color */
 ::selection {
-  background: var(--primary-light);
+  background: var(--primary);
   color: var(--foreground);
+}
+
+/* Pill button style */
+.btn-pill {
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.btn-pill-primary {
+  background: var(--foreground);
+  color: var(--background);
+}
+
+.btn-pill-secondary {
+  background: var(--card);
+  color: var(--muted-dark);
+  border: 1px solid var(--border);
+}
+
+/* Filter pill style */
+.filter-pill {
+  padding: 0.375rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.filter-pill-active {
+  background: var(--foreground);
+  color: var(--background);
+}
+
+.filter-pill-inactive {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
 }

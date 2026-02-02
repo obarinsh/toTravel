@@ -220,7 +220,8 @@ export default function DayBasedItinerary({
       <div className="space-y-10">
         {/* Unassigned attractions row */}
         <motion.div 
-          className="bg-secondary/5 border border-secondary/20 rounded-[2rem] p-6"
+          className="rounded-[2rem] p-6"
+          style={{ backgroundColor: 'rgba(92, 107, 74, 0.05)', border: '1px solid rgba(92, 107, 74, 0.2)' }}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}

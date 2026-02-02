@@ -45,7 +45,7 @@ export default function DateRangePicker({
                 setEnd('');
               }
             }}
-            className="w-full px-3 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full px-3 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-secondary"
             required
           />
         </div>
@@ -58,7 +58,7 @@ export default function DateRangePicker({
             value={end}
             onChange={(e) => setEnd(e.target.value)}
             min={minEndDate}
-            className="w-full px-3 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full px-3 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-secondary"
             required
           />
         </div>

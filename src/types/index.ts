@@ -21,6 +21,8 @@ export interface Trip {
   destination_coordinates: Coordinates;
   attractions: Attraction[];
   hotel_location?: Coordinates;
+  hotel_name?: string | null; // Name of the hotel
+  hotel_address?: string | null; // Full address of the hotel
   start_date?: string | null; // ISO date string (YYYY-MM-DD)
   end_date?: string | null; // ISO date string (YYYY-MM-DD)
   created_at: string;

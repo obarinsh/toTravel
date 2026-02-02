@@ -1,75 +1,205 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Search, Loader2, Leaf, Wheat } from 'lucide-react';
-import { Coordinates } from '@/types';
+import { Loader2, Plus, Check, ImageIcon, MapPin, Star } from 'lucide-react';
+import { Coordinates, Attraction } from '@/types';
+import RestaurantModal from './RestaurantModal';
 
 interface FoodTabProps {
   destination: string;
   hotelLocation?: Coordinates;
-  startDate?: string | null;
-  endDate?: string | null;
-  numDays: number;
+  onAddRestaurant?: (restaurant: Omit<Attraction, 'id' | 'order'>) => void;
 }
 
-interface Restaurant {
+interface RestaurantCard {
+  id?: string;
   name: string;
   cuisine: string;
-  description: string;
+  description?: string;
   priceRange: string;
-  dietaryOptions: string[];
+  address: string;
+  rating?: number;
+  reviewCount?: number;
+  photoUrl?: string | null;
+  website?: string | null;
+  googleMapsUrl?: string | null;
+  coordinates?: { lat: number; lng: number } | null;
+  isAdded: boolean;
+  isAdding?: boolean;
 }
 
-// Simple markdown parser for AI responses
-function formatResponse(text: string): React.ReactNode {
-  const lines = text.split('\n');
-  
-  return lines.map((line, lineIndex) => {
-    const parts: React.ReactNode[] = [];
-    let remaining = line;
-    let partIndex = 0;
-    
-    while (remaining.length > 0) {
-      const boldMatch = remaining.match(/\*\*(.+?)\*\*/);
-      
-      if (boldMatch && boldMatch.index !== undefined) {
-        if (boldMatch.index > 0) {
-          parts.push(<span key={`${lineIndex}-${partIndex++}`}>{remaining.slice(0, boldMatch.index)}</span>);
-        }
-        parts.push(<strong key={`${lineIndex}-${partIndex++}`} className="font-semibold text-foreground">{boldMatch[1]}</strong>);
-        remaining = remaining.slice(boldMatch.index + boldMatch[0].length);
-      } else {
-        parts.push(<span key={`${lineIndex}-${partIndex++}`}>{remaining}</span>);
-        break;
-      }
+// Fetch image from our API (fallback)
+async function fetchRestaurantImage(name: string): Promise<string | null> {
+  try {
+    const response = await fetch(`/api/image?query=${encodeURIComponent(name + ' restaurant food')}`);
+    if (response.ok) {
+      const data = await response.json();
+      return data.imageUrl || null;
     }
-    
-    return (
-      <p key={lineIndex} className={line.trim() === '' ? 'h-3' : 'mb-2'}>
-        {parts.length > 0 ? parts : '\u00A0'}
-      </p>
-    );
-  });
+    return null;
+  } catch {
+    return null;
+  }
 }
 
 const DIETARY_FILTERS = [
-  { id: 'vegetarian', label: 'Vegetarian', icon: Leaf },
-  { id: 'vegan', label: 'Vegan', icon: Leaf },
-  { id: 'kosher', label: 'Kosher', icon: null },
-  { id: 'halal', label: 'Halal', icon: null },
-  { id: 'gluten-free', label: 'Gluten-Free', icon: Wheat },
+  { id: 'vegetarian', label: 'Vegetarian' },
+  { id: 'vegan', label: 'Vegan' },
+  { id: 'kosher', label: 'Kosher' },
+  { id: 'halal', label: 'Halal' },
+  { id: 'gluten-free', label: 'Gluten-Free' },
 ];
 
 const CUISINE_FILTERS = [
-  'Local', 'Italian', 'Asian', 'Mediterranean', 'French', 'American', 'Indian', 'Mexican', 'Japanese', 'Thai'
+  { id: 'local', label: 'Local' },
+  { id: 'italian', label: 'Italian' },
+  { id: 'asian', label: 'Asian' },
+  { id: 'mediterranean', label: 'Mediterranean' },
+  { id: 'french', label: 'French' },
+  { id: 'american', label: 'American' },
+  { id: 'indian', label: 'Indian' },
+  { id: 'mexican', label: 'Mexican' },
+  { id: 'japanese', label: 'Japanese' },
+  { id: 'thai', label: 'Thai' },
 ];
 
-export default function FoodTab({ destination, hotelLocation, numDays }: FoodTabProps) {
-  const [selectedDay, setSelectedDay] = useState<number | 'all'>('all');
+// Restaurant Card Component with real data support
+function RestaurantCardComponent({ 
+  restaurant, 
+  index,
+  onAdd,
+}: { 
+  restaurant: RestaurantCard; 
+  index: number;
+  onAdd: () => void;
+}) {
+  const [imageUrl, setImageUrl] = useState<string | null>(restaurant.photoUrl || null);
+  const [imageLoading, setImageLoading] = useState(!restaurant.photoUrl);
+  const [imageError, setImageError] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Fetch fallback image if no photo provided
+  useEffect(() => {
+    if (!restaurant.photoUrl) {
+      setImageLoading(true);
+      setImageError(false);
+      fetchRestaurantImage(restaurant.name).then((url) => {
+        setImageUrl(url);
+        setImageLoading(false);
+      });
+    }
+  }, [restaurant.name, restaurant.photoUrl]);
+
+  return (
+    <>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: index * 0.05 }}
+        className="bg-background rounded-xl overflow-hidden border border-transparent hover:border-border/50 hover:bg-moss-light/50 transition-all duration-300 group cursor-pointer"
+        whileHover={{ scale: 1.01 }}
+        onClick={() => setIsModalOpen(true)}
+      >
+        <div className="flex items-start gap-3 p-3">
+          {/* Photo thumbnail */}
+          <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-moss-light relative">
+            {imageLoading ? (
+              <div className="w-full h-full flex items-center justify-center">
+                <ImageIcon size={20} className="text-secondary/40 animate-pulse" strokeWidth={1.5} />
+              </div>
+            ) : imageUrl && !imageError ? (
+              <img
+                src={imageUrl}
+                alt={restaurant.name}
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                onError={() => setImageError(true)}
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-secondary/30 to-secondary/50 flex items-center justify-center">
+                <ImageIcon size={20} className="text-white/60" strokeWidth={1.5} />
+              </div>
+            )}
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 min-w-0">
+            <h4 className="font-heading font-medium text-foreground text-sm leading-tight line-clamp-1">
+              {restaurant.name}
+            </h4>
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
+              <span className="text-xs text-muted font-body font-light">
+                {restaurant.cuisine}
+              </span>
+              {restaurant.priceRange && (
+                <>
+                  <span className="text-border">·</span>
+                  <span className="text-xs text-muted font-body font-light">
+                    {restaurant.priceRange}
+                  </span>
+                </>
+              )}
+              {restaurant.rating && (
+                <>
+                  <span className="text-border">·</span>
+                  <span className="text-xs text-secondary font-body font-medium flex items-center gap-0.5">
+                    <Star size={10} strokeWidth={2} fill="currentColor" />
+                    {restaurant.rating.toFixed(1)}
+                  </span>
+                </>
+              )}
+            </div>
+            
+            {/* Address */}
+            {restaurant.address && (
+              <p className="text-xs text-secondary font-body font-light mt-1 flex items-center gap-1 truncate">
+                <MapPin size={10} strokeWidth={1.5} />
+                <span className="truncate">{restaurant.address}</span>
+              </p>
+            )}
+          </div>
+
+          {/* Add button */}
+          <motion.button
+            onClick={(e) => {
+              e.stopPropagation();
+              onAdd();
+            }}
+            disabled={restaurant.isAdded || restaurant.isAdding}
+            className={`flex-shrink-0 p-2 rounded-xl transition-all duration-300 text-white hover:scale-105 ${
+              restaurant.isAdded ? 'bg-green-500' : ''
+            }`}
+            style={{ backgroundColor: restaurant.isAdded ? '#22c55e' : restaurant.isAdding ? 'rgba(92, 107, 74, 0.5)' : '#5C6B4A' }}
+            whileTap={restaurant.isAdded || restaurant.isAdding ? {} : { scale: 0.95 }}
+          >
+            {restaurant.isAdded ? (
+              <Check size={16} strokeWidth={2} />
+            ) : restaurant.isAdding ? (
+              <Loader2 size={16} strokeWidth={2} className="animate-spin" />
+            ) : (
+              <Plus size={16} strokeWidth={2} />
+            )}
+          </motion.button>
+        </div>
+      </motion.div>
+
+      {/* Modal */}
+      <RestaurantModal
+        restaurant={{
+          ...restaurant,
+          photoUrl: imageUrl,
+        }}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
+    </>
+  );
+}
+
+export default function FoodTab({ destination, hotelLocation, onAddRestaurant }: FoodTabProps) {
   const [dietaryFilters, setDietaryFilters] = useState<string[]>([]);
-  const [cuisineFilter, setCuisineFilter] = useState<string>('');
-  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [cuisineFilters, setCuisineFilters] = useState<string[]>([]);
+  const [restaurants, setRestaurants] = useState<RestaurantCard[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
@@ -81,22 +211,91 @@ export default function FoodTab({ destination, hotelLocation, numDays }: FoodTab
     );
   };
 
+  const toggleCuisineFilter = (filter: string) => {
+    setCuisineFilters(prev => 
+      prev.includes(filter) 
+        ? prev.filter(f => f !== filter)
+        : [...prev, filter]
+    );
+  };
+
+  // Try Google Places API first, fall back to AI
   const searchRestaurants = async () => {
     setIsLoading(true);
     setHasSearched(true);
+    setRestaurants([]); // Clear previous results
 
     try {
-      const filterString = [
-        ...dietaryFilters,
-        cuisineFilter
-      ].filter(Boolean).join(', ');
+      // Try Google Places API first
+      const googleResponse = await fetch('/api/restaurants', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          destination,
+          cuisine: cuisineFilters.map(id => CUISINE_FILTERS.find(f => f.id === id)?.label).filter(Boolean),
+          dietary: dietaryFilters.map(id => DIETARY_FILTERS.find(f => f.id === id)?.label).filter(Boolean),
+          coordinates: hotelLocation,
+        }),
+      });
+
+      if (!googleResponse.ok) {
+        console.log('Google Places API error, falling back to AI');
+        await searchRestaurantsWithAI();
+        return;
+      }
+
+      const googleData = await googleResponse.json();
+      console.log('Google Places response:', googleData);
+
+      // If we got real restaurants from Google
+      if (googleData.restaurants && googleData.restaurants.length > 0) {
+        setRestaurants(googleData.restaurants.map((r: RestaurantCard) => ({
+          ...r,
+          isAdded: false,
+        })));
+        setIsLoading(false);
+        return;
+      }
+
+      // Fall back to AI-generated results if no results or fallback flag
+      console.log('No Google results, falling back to AI');
+      await searchRestaurantsWithAI();
+
+    } catch (error) {
+      console.error('Error with Google Places, falling back to AI:', error);
+      await searchRestaurantsWithAI();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // AI fallback search
+  const searchRestaurantsWithAI = async () => {
+    try {
+      const dietaryString = dietaryFilters.length > 0 
+        ? dietaryFilters.map(id => DIETARY_FILTERS.find(f => f.id === id)?.label).join(', ')
+        : '';
+      const cuisineString = cuisineFilters.length > 0
+        ? cuisineFilters.map(id => CUISINE_FILTERS.find(f => f.id === id)?.label).join(', ')
+        : '';
+
+      const filters = [dietaryString, cuisineString].filter(Boolean).join(' and ');
 
       const response = await fetch('/api/query', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           destination,
-          query: `Recommend 5 restaurants in ${destination}${filterString ? ` that are ${filterString}` : ''}. For each restaurant provide: name, cuisine type, brief description, price range ($, $$, $$$), and any dietary options they accommodate. Format as a list.`,
+          query: `Recommend 6 real restaurants in ${destination}${filters ? ` that serve ${filters} cuisine` : ''}. 
+
+For each restaurant, use this EXACT format:
+1. **Restaurant Name**
+CUISINE: [Type of cuisine]
+PRICE: [$ or $$ or $$$]
+ADDRESS: [Street address in ${destination}]
+DESCRIPTION: A brief 1-2 sentence description of the restaurant and what makes it special.
+
+Make sure each restaurant has a real name, cuisine type, price range, and address.`,
           hotelLocation,
         }),
       });
@@ -104,138 +303,264 @@ export default function FoodTab({ destination, hotelLocation, numDays }: FoodTab
       const data = await response.json();
       
       if (data.response) {
-        setRestaurants([{
-          name: 'Search Results',
-          cuisine: '',
-          description: data.response,
-          priceRange: '',
-          dietaryOptions: [],
-        }]);
+        const parsed = parseRestaurantsFromResponse(data.response);
+        setRestaurants(parsed.length > 0 ? parsed : []);
       }
     } catch (error) {
-      console.error('Error searching restaurants:', error);
-    } finally {
-      setIsLoading(false);
+      console.error('Error searching restaurants with AI:', error);
+    }
+  };
+
+  const parseRestaurantsFromResponse = (response: string): RestaurantCard[] => {
+    const restaurants: RestaurantCard[] = [];
+    
+    const sections = response.split(/(?=\d+\.\s)/);
+    
+    for (const section of sections) {
+      const trimmed = section.trim();
+      if (!trimmed || trimmed.length < 10) continue;
+      
+      if (!trimmed.match(/^\d+\.\s/)) continue;
+      
+      const firstLine = trimmed.split('\n')[0].toLowerCase();
+      if (firstLine.includes('here are') || 
+          firstLine.includes('excellent') || 
+          firstLine.includes('recommend') ||
+          firstLine.includes('serving') ||
+          firstLine.includes('restaurants in')) continue;
+      
+      const nameMatch = trimmed.match(/^\d+\.\s*\*?\*?([^*\n]+)\*?\*?\s*$/m) || 
+                        trimmed.match(/^\d+\.\s*\*\*([^*]+)\*\*/);
+      
+      const addressMatch = trimmed.match(/ADDRESS:\s*([^\n]+)/i);
+      const cuisineMatch = trimmed.match(/CUISINE:\s*([^\n]+)/i);
+      const priceMatch = trimmed.match(/PRICE:\s*([^\n]+)/i) || trimmed.match(/(\$+)/);
+      const descMatch = trimmed.match(/DESCRIPTION:\s*([\s\S]+)/i);
+      
+      let name = '';
+      let address = '';
+      let cuisine = '';
+      let priceRange = '';
+      let description = '';
+      
+      if (nameMatch) {
+        name = nameMatch[1].replace(/\*\*/g, '').replace(/[-–:]\s*$/, '').trim();
+      }
+      
+      if (addressMatch) address = addressMatch[1].trim();
+      if (cuisineMatch) cuisine = cuisineMatch[1].trim();
+      if (priceMatch) priceRange = priceMatch[1].trim();
+      if (descMatch) description = descMatch[1].replace(/\*\*/g, '').trim();
+      
+      if (!name) {
+        const lines = trimmed.split('\n').filter(l => l.trim());
+        if (lines.length > 0) {
+          name = lines[0].replace(/^\d+\.\s*/, '').replace(/\*\*/g, '').replace(/[-–:]\s*$/, '').trim();
+          
+          for (const line of lines.slice(1)) {
+            const lower = line.toLowerCase();
+            if (lower.startsWith('address:')) address = line.replace(/^address:\s*/i, '').trim();
+            else if (lower.startsWith('cuisine:')) cuisine = line.replace(/^cuisine:\s*/i, '').trim();
+            else if (lower.startsWith('price:')) priceRange = line.replace(/^price:\s*/i, '').trim();
+            else if (lower.startsWith('description:')) description = line.replace(/^description:\s*/i, '').trim();
+            else if (!description && !lower.includes(':')) description += ' ' + line;
+          }
+        }
+      }
+      
+      if (!address) address = destination;
+      if (!cuisine) cuisine = 'Restaurant';
+      
+      if (name && name.length > 2) {
+        restaurants.push({
+          name,
+          cuisine,
+          description: description.trim() || 'A great dining experience.',
+          priceRange,
+          address,
+          isAdded: false,
+        });
+      }
+    }
+    
+    return restaurants;
+  };
+
+  const handleAddRestaurant = async (restaurant: RestaurantCard, index: number) => {
+    if (!onAddRestaurant) return;
+
+    setRestaurants(prev => prev.map((r, i) => 
+      i === index ? { ...r, isAdding: true } : r
+    ));
+
+    try {
+      let coordinates = restaurant.coordinates || hotelLocation || { lat: 0, lng: 0 };
+      
+      // Geocode if no coordinates
+      if (!restaurant.coordinates && restaurant.address) {
+        const geocodeResponse = await fetch('/api/geocode-place', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            placeName: restaurant.name,
+            city: restaurant.address,
+          }),
+        });
+        
+        if (geocodeResponse.ok) {
+          const geoData = await geocodeResponse.json();
+          if (geoData.coordinates) {
+            coordinates = { lat: geoData.coordinates.lat, lng: geoData.coordinates.lng };
+          }
+        }
+      }
+
+      // Call the callback to add the restaurant as an attraction
+      onAddRestaurant({
+        name: restaurant.name,
+        description: `${restaurant.cuisine} · ${restaurant.priceRange}${restaurant.rating ? ` · ${restaurant.rating}★` : ''}\n${restaurant.description || ''}`,
+        coordinates,
+        day: null,
+      });
+
+      setRestaurants(prev => prev.map((r, i) => 
+        i === index ? { ...r, isAdded: true, isAdding: false } : r
+      ));
+    } catch (error) {
+      console.error('Error adding restaurant:', error);
+      setRestaurants(prev => prev.map((r, i) => 
+        i === index ? { ...r, isAdding: false } : r
+      ));
     }
   };
 
   return (
     <motion.div 
-      className="space-y-8"
+      className="space-y-12"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
     >
-      {/* Day selector */}
-      {numDays > 0 && (
-        <div className="flex items-center gap-3 overflow-x-auto pb-2">
-          <span className="label-premium text-muted flex-shrink-0">Day:</span>
-          <button
-            onClick={() => setSelectedDay('all')}
-            className={`px-5 py-2.5 text-sm rounded-full flex-shrink-0 transition-all duration-300 font-body ${
-              selectedDay === 'all'
-                ? 'bg-foreground text-background'
-                : 'bg-card border border-border/50 text-muted hover:border-primary hover:text-foreground'
-            }`}
-          >
-            All Days
-          </button>
-          {Array.from({ length: numDays }, (_, i) => i + 1).map((day) => (
+      {/* Dietary filters - editorial style */}
+      <div>
+        <p className="text-[10px] tracking-[0.25em] uppercase text-muted mb-5 font-body">
+          Dietary Preferences
+        </p>
+        <div className="flex flex-wrap gap-x-8 gap-y-3">
+          {DIETARY_FILTERS.map((filter) => (
             <button
-              key={day}
-              onClick={() => setSelectedDay(day)}
-              className={`px-5 py-2.5 text-sm rounded-full flex-shrink-0 transition-all duration-300 font-body ${
-                selectedDay === day
-                  ? 'bg-foreground text-background'
-                  : 'bg-card border border-border/50 text-muted hover:border-primary hover:text-foreground'
-              }`}
+              key={filter.id}
+              onClick={() => toggleDietaryFilter(filter.id)}
+              className="group relative py-1"
             >
-              Day {day}
+              <span className={`text-sm tracking-wide transition-colors duration-200 font-body ${
+                dietaryFilters.includes(filter.id)
+                  ? 'text-foreground'
+                  : 'text-muted hover:text-foreground/70'
+              }`}>
+                {filter.label}
+              </span>
+              <span 
+                className={`absolute bottom-0 left-0 h-[1px] transition-all duration-300 ease-out ${
+                  dietaryFilters.includes(filter.id)
+                    ? 'w-full'
+                    : 'w-0 group-hover:w-full'
+                }`} 
+                style={{ backgroundColor: dietaryFilters.includes(filter.id) ? '#5C6B4A' : '#8B9082' }}
+              />
             </button>
           ))}
         </div>
-      )}
-
-      {/* Dietary filters */}
-      <div className="space-y-4">
-        <h3 className="font-heading font-semibold text-foreground">Dietary Preferences</h3>
-        <div className="flex flex-wrap gap-3">
-          {DIETARY_FILTERS.map((filter) => (
-            <motion.button
-              key={filter.id}
-              onClick={() => toggleDietaryFilter(filter.id)}
-              className={`px-5 py-3 rounded-[2rem] text-sm flex items-center gap-2 transition-all duration-300 font-body ${
-                dietaryFilters.includes(filter.id)
-                  ? 'bg-secondary text-white shadow-warm'
-                  : 'bg-card border border-border/50 text-foreground hover:border-secondary hover:scale-[1.02]'
-              }`}
-              whileTap={{ scale: 0.98 }}
-            >
-              {filter.icon && <filter.icon size={16} strokeWidth={1.5} />}
-              {filter.label}
-            </motion.button>
-          ))}
-        </div>
       </div>
 
-      {/* Cuisine filter */}
-      <div className="space-y-4">
-        <h3 className="font-heading font-semibold text-foreground">Cuisine Type</h3>
-        <div className="flex flex-wrap gap-3">
+      {/* Cuisine filter - editorial style */}
+      <div>
+        <p className="text-[10px] tracking-[0.25em] uppercase text-muted mb-5 font-body">
+          Cuisine Type
+        </p>
+        <div className="flex flex-wrap gap-x-8 gap-y-3">
           {CUISINE_FILTERS.map((cuisine) => (
-            <motion.button
-              key={cuisine}
-              onClick={() => setCuisineFilter(cuisineFilter === cuisine ? '' : cuisine)}
-              className={`px-5 py-3 rounded-[2rem] text-sm transition-all duration-300 font-body ${
-                cuisineFilter === cuisine
-                  ? 'bg-primary text-white shadow-warm'
-                  : 'bg-card border border-border/50 text-foreground hover:border-primary hover:scale-[1.02]'
-              }`}
-              whileTap={{ scale: 0.98 }}
+            <button
+              key={cuisine.id}
+              onClick={() => toggleCuisineFilter(cuisine.id)}
+              className="group relative py-1"
             >
-              {cuisine}
-            </motion.button>
+              <span className={`text-sm tracking-wide transition-colors duration-200 font-body ${
+                cuisineFilters.includes(cuisine.id)
+                  ? 'text-foreground'
+                  : 'text-muted hover:text-foreground/70'
+              }`}>
+                {cuisine.label}
+              </span>
+              <span 
+                className={`absolute bottom-0 left-0 h-[1px] transition-all duration-300 ease-out ${
+                  cuisineFilters.includes(cuisine.id)
+                    ? 'w-full'
+                    : 'w-0 group-hover:w-full'
+                }`} 
+                style={{ backgroundColor: cuisineFilters.includes(cuisine.id) ? '#5C6B4A' : '#8B9082' }}
+              />
+            </button>
           ))}
         </div>
       </div>
 
-      {/* Search button */}
-      <motion.button
-        onClick={searchRestaurants}
-        disabled={isLoading}
-        className="w-full py-4 bg-primary text-white rounded-[2rem] font-body font-medium hover:bg-primary-dark hover:scale-[1.01] disabled:opacity-50 transition-all duration-300 flex items-center justify-center gap-3 shadow-warm"
-        whileTap={{ scale: 0.98 }}
-      >
-        {isLoading ? (
-          <>
-            <Loader2 size={20} className="animate-spin" strokeWidth={1.5} />
-            <span>Searching...</span>
-          </>
-        ) : (
-          <>
-            <Search size={20} strokeWidth={1.5} />
-            <span>Find Restaurants</span>
-          </>
-        )}
-      </motion.button>
+      {/* Search button - compact */}
+      <div>
+        <motion.button
+          onClick={searchRestaurants}
+          disabled={isLoading}
+          className="px-8 py-3 text-white text-xs tracking-[0.15em] uppercase disabled:opacity-50 transition-colors duration-200 font-body"
+          style={{ backgroundColor: '#5C6B4A' }}
+          whileTap={{ scale: 0.98 }}
+        >
+          {isLoading ? 'Searching...' : 'Find Restaurants'}
+        </motion.button>
+      </div>
 
-      {/* Results */}
-      {hasSearched && (
+      {/* Results as Cards */}
+      {hasSearched && !isLoading && (
         <motion.div 
           className="space-y-4"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <h3 className="font-heading font-semibold text-lg text-foreground">Recommendations</h3>
+          <p className="text-[10px] tracking-[0.25em] uppercase text-muted font-body">
+            Recommendations
+            {restaurants.length > 0 && <span className="normal-case tracking-normal ml-2">({restaurants.length})</span>}
+          </p>
+          
           {restaurants.length > 0 ? (
-            <div className="bg-card border border-border/50 rounded-[2rem] p-6 shadow-warm">
-              <div className="text-sm text-muted font-body font-light leading-relaxed">
-                {formatResponse(restaurants[0].description)}
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {restaurants.map((restaurant, index) => (
+                  <RestaurantCardComponent
+                    key={restaurant.id || `${restaurant.name}-${index}`}
+                    restaurant={restaurant}
+                    index={index}
+                    onAdd={() => handleAddRestaurant(restaurant, index)}
+                  />
+                ))}
               </div>
-            </div>
+              
+              {/* Show More button */}
+              <div className="text-center pt-4">
+                <button
+                  onClick={searchRestaurants}
+                  className="group relative py-1 px-4"
+                >
+                  <span className="text-sm tracking-wide text-muted hover:text-foreground transition-colors duration-200 font-body">
+                    Show different options
+                  </span>
+                  <span className="absolute bottom-0 left-0 w-0 h-[1px] transition-all duration-300 ease-out group-hover:w-full" style={{ backgroundColor: '#5C6B4A' }} />
+                </button>
+              </div>
+            </>
           ) : (
-            <p className="text-muted text-center py-12 font-body font-light">No restaurants found. Try adjusting your filters.</p>
+            <div className="text-center py-12">
+              <p className="text-muted font-body font-light">No restaurants found. Try different filters.</p>
+            </div>
           )}
         </motion.div>
       )}
@@ -243,16 +568,13 @@ export default function FoodTab({ destination, hotelLocation, numDays }: FoodTab
       {/* Empty state */}
       {!hasSearched && (
         <motion.div 
-          className="text-center py-16"
+          className="text-center py-12"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
         >
-          <div className="w-20 h-20 bg-secondary/10 rounded-[2rem] flex items-center justify-center mx-auto mb-6">
-            <Search size={32} className="text-secondary" strokeWidth={1} />
-          </div>
-          <p className="font-heading text-xl font-semibold mb-2 text-foreground">Find the perfect restaurant</p>
-          <p className="text-muted font-body font-light">Select your preferences and search for recommendations</p>
+          <p className="font-heading text-lg font-light mb-2 text-foreground">Find the perfect restaurant</p>
+          <p className="text-sm text-muted font-body font-light">Select your preferences above</p>
         </motion.div>
       )}
     </motion.div>

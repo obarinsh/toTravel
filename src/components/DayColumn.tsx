@@ -49,17 +49,23 @@ export default function DayColumn({
       ref={setNodeRef}
       className={`
         rounded-[2rem] transition-all duration-300
-        ${isOver ? 'bg-secondary/5' : ''}
+        ${isOver ? 'bg-[rgba(92,107,74,0.05)]' : ''}
       `}
     >
       {/* Header */}
       <div className="flex items-center gap-4 mb-5">
         {dayNumber !== null ? (
-          <span className="w-12 h-12 bg-primary text-white rounded-2xl flex items-center justify-center text-lg font-heading font-semibold shadow-warm">
+          <span 
+            className="w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-heading font-semibold shadow-warm"
+            style={{ backgroundColor: '#E4B84A', color: '#4A4F45' }}
+          >
             {dayNumber}
           </span>
         ) : (
-          <span className="w-12 h-12 bg-secondary text-white rounded-2xl flex items-center justify-center shadow-warm">
+          <span 
+            className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-warm"
+            style={{ backgroundColor: '#E4B84A', color: '#4A4F45' }}
+          >
             <Package size={20} strokeWidth={1.5} />
           </span>
         )}

@@ -63,22 +63,13 @@ export default function TripCard({ trip, onDelete }: TripCardProps) {
       >
         {/* Top Content Section - Editorial Typography */}
         <div className="p-6 pt-10 h-[160px]">
-          {/* Header row with title and delete */}
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <h2 className="font-heading text-[1.75rem] font-semibold text-foreground tracking-tight leading-tight">
-                {trip.destination}
-              </h2>
-              <p className="font-heading text-base text-muted font-light mt-2">
-                {hasDateRange ? `${formatDate(trip.start_date!)} - ${formatDate(trip.end_date!)}` : 'Explore'}
-              </p>
-            </div>
-            
-            {/* Decorative lines like in the reference */}
-            <div className="flex flex-col gap-1 mt-2">
-              <div className="w-5 h-0.5 bg-foreground/60" />
-              <div className="w-3 h-0.5 bg-foreground/40" />
-            </div>
+          <div>
+            <h2 className="font-heading text-[1.75rem] font-semibold text-foreground tracking-tight leading-tight">
+              {trip.destination}
+            </h2>
+            <p className="font-heading text-base text-muted font-light mt-2">
+              {hasDateRange ? `${formatDate(trip.start_date!)} - ${formatDate(trip.end_date!)}` : 'Explore'}
+            </p>
           </div>
         </div>
 
@@ -87,7 +78,7 @@ export default function TripCard({ trip, onDelete }: TripCardProps) {
           <div className="absolute inset-0 overflow-hidden">
             {imageLoading ? (
               <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-primary/10 to-primary/30">
-                <ImageIcon size={40} className="text-primary/30 animate-pulse" strokeWidth={1} />
+                <ImageIcon size={40} className="text-secondary/30 animate-pulse" strokeWidth={1} />
               </div>
             ) : imageUrl ? (
               <img
