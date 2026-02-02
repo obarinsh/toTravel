@@ -271,7 +271,7 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  {['Rothschild Boulevard', 'Carmel Market', 'Bauhaus Center'].map((place, i) => (
+                  {['Bryggen Wharf', 'Fløibanen Funicular', 'Fish Market'].map((place, i) => (
                     <div key={i} className="flex items-center gap-2">
                       <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#C5C7C0' }} />
                       <span className="text-sm" style={{ color: '#6B6B65' }}>{place}</span>
