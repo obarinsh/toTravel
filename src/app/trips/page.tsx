@@ -7,9 +7,29 @@ import { Plus, Globe, Loader2 } from 'lucide-react';
 import { Trip } from '@/types';
 import TripCard from '@/components/TripCard';
 
+type FilterStatus = 'all' | 'upcoming' | 'past' | 'draft';
+
+// Determine trip status based on dates
+function getTripStatus(trip: Trip): 'upcoming' | 'past' | 'draft' {
+  if (!trip.start_date || !trip.end_date) {
+    return 'draft';
+  }
+  
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const endDate = new Date(trip.end_date);
+  endDate.setHours(0, 0, 0, 0);
+  
+  if (endDate < today) {
+    return 'past';
+  }
+  return 'upcoming';
+}
+
 export default function TripsPage() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [filter, setFilter] = useState<FilterStatus>('all');
 
   useEffect(() => {
     const fetchTrips = async () => {
@@ -36,6 +56,27 @@ export default function TripsPage() {
     }
   };
 
+  // Filter trips based on selected filter
+  const filteredTrips = trips.filter(trip => {
+    if (filter === 'all') return true;
+    return getTripStatus(trip) === filter;
+  });
+
+  // Count trips by status
+  const counts = {
+    all: trips.length,
+    upcoming: trips.filter(t => getTripStatus(t) === 'upcoming').length,
+    past: trips.filter(t => getTripStatus(t) === 'past').length,
+    draft: trips.filter(t => getTripStatus(t) === 'draft').length,
+  };
+
+  const filterOptions: { value: FilterStatus; label: string }[] = [
+    { value: 'all', label: 'All' },
+    { value: 'upcoming', label: 'Upcoming' },
+    { value: 'past', label: 'Past' },
+    { value: 'draft', label: 'Drafts' },
+  ];
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh] pt-24">
@@ -58,13 +99,11 @@ export default function TripsPage() {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
     >
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-12 gap-4">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
         <div>
           <p className="label-premium text-muted mb-2">Your Collection</p>
           <h1 className="font-heading text-4xl font-semibold text-foreground tracking-tight">My Trips</h1>
-          <p className="text-muted font-body font-light mt-2">
-            {trips.length} {trips.length === 1 ? 'trip' : 'trips'} saved
-          </p>
         </div>
         <Link
           href="/"
@@ -75,6 +114,42 @@ export default function TripsPage() {
           <span className="label-premium">New Trip</span>
         </Link>
       </div>
+
+      {/* Filter Bar */}
+      {trips.length > 0 && (
+        <div className="flex items-center gap-2 mb-8 overflow-x-auto pb-2">
+          {filterOptions.map((option) => {
+            const isActive = filter === option.value;
+            const count = counts[option.value];
+            
+            return (
+              <button
+                key={option.value}
+                onClick={() => setFilter(option.value)}
+                className={`
+                  flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium
+                  transition-all duration-300 whitespace-nowrap
+                  ${isActive 
+                    ? 'text-white' 
+                    : 'bg-white/80 text-foreground/70 hover:bg-white hover:text-foreground border border-border'
+                  }
+                `}
+                style={isActive ? { backgroundColor: '#5C6B4A' } : undefined}
+              >
+                {option.label}
+                <span 
+                  className={`
+                    text-xs px-1.5 py-0.5 rounded-full
+                    ${isActive ? 'bg-white/20 text-white' : 'bg-foreground/10 text-foreground/60'}
+                  `}
+                >
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {trips.length === 0 ? (
         <motion.div 
@@ -99,9 +174,19 @@ export default function TripsPage() {
             <span className="font-body font-medium">Plan a Trip</span>
           </Link>
         </motion.div>
+      ) : filteredTrips.length === 0 ? (
+        <motion.div 
+          className="text-center py-16"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          <p className="text-muted font-body font-light">
+            No {filter === 'draft' ? 'draft' : filter} trips found
+          </p>
+        </motion.div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {trips.map((trip, index) => (
+          {filteredTrips.map((trip, index) => (
             <motion.div
               key={trip.id}
               initial={{ opacity: 0, y: 20 }}

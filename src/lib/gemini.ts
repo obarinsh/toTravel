@@ -5,9 +5,9 @@ console.log('Gemini API Key loaded:', apiKey ? `${apiKey.substring(0, 10)}...` :
 
 const genAI = new GoogleGenerativeAI(apiKey);
 
-// Use gemini-1.5-flash which is stable and widely available
+// Use gemini-2.5-flash
 export const geminiModel = genAI.getGenerativeModel({ 
-  model: 'gemini-1.5-flash',
+  model: 'gemini-2.5-flash',
 });
 
 export async function generateAttractions(destination: string): Promise<{

@@ -16,16 +16,22 @@ import {
   arrayMove,
   sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable';
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { motion } from 'motion/react';
-import { Map, Share2, Calendar, Check, Download } from 'lucide-react';
-import { exportTripToPDF } from '@/lib/pdfExport';
+import { Map, Calendar, Hotel, X } from 'lucide-react';
 import { Attraction, Coordinates, Trip } from '@/types';
 import SuggestionsPanel from './SuggestionsPanel';
 import DayCard from './DayCard';
 import { PlaceCardContent } from './PlaceCard';
 import { calculateDays, formatDate } from './DateRangePicker';
 import MapWrapper from './MapWrapper';
+import HotelSearch from './HotelSearch';
+
+interface HotelData {
+  name: string;
+  address: string;
+  coordinates: Coordinates;
+}
 
 interface ItineraryViewProps {
   trip: Trip;
@@ -35,6 +41,10 @@ interface ItineraryViewProps {
   onRemoveAttraction?: (id: string) => void;
   onMapClick?: (coordinates: Coordinates) => void;
   isSelectingHotel?: boolean;
+  onHotelSelect?: (hotel: HotelData) => void;
+  onHotelClear?: () => void;
+  hotelSearchMode?: 'none' | 'search' | 'click';
+  onHotelSearchModeChange?: (mode: 'none' | 'search' | 'click') => void;
 }
 
 export default function ItineraryView({
@@ -45,56 +55,14 @@ export default function ItineraryView({
   onRemoveAttraction,
   onMapClick,
   isSelectingHotel,
+  onHotelSelect,
+  onHotelClear,
+  hotelSearchMode = 'none',
+  onHotelSearchModeChange,
 }: ItineraryViewProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isMapExpanded, setIsMapExpanded] = useState(false);
   const [mapDayFilter, setMapDayFilter] = useState<number | 'all' | 'unassigned'>('all');
-  const [shareStatus, setShareStatus] = useState<'idle' | 'copied'>('idle');
-
-  // Share trip functionality
-  const handleShareTrip = useCallback(async () => {
-    const tripUrl = window.location.href;
-    
-    // Try native share first (mobile)
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `Trip to ${trip.destination}`,
-          text: `Check out my trip to ${trip.destination}!`,
-          url: tripUrl,
-        });
-        return;
-      } catch (err) {
-        // User cancelled or share failed, fall back to clipboard
-      }
-    }
-    
-    // Fall back to clipboard
-    try {
-      await navigator.clipboard.writeText(tripUrl);
-      setShareStatus('copied');
-      setTimeout(() => setShareStatus('idle'), 2000);
-    } catch (err) {
-      // Fallback for older browsers
-      const textArea = document.createElement('textarea');
-      textArea.value = tripUrl;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
-      setShareStatus('copied');
-      setTimeout(() => setShareStatus('idle'), 2000);
-    }
-  }, [trip.destination]);
-
-  // Export to PDF
-  const handleExportPDF = useCallback(() => {
-    exportTripToPDF({
-      trip,
-      startDate: trip.start_date,
-      endDate: trip.end_date,
-    });
-  }, [trip]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -246,56 +214,96 @@ export default function ItineraryView({
         <div className="flex-1 flex flex-col min-w-0 bg-background">
           {/* Header - Controls only */}
           <div className="bg-card border-b border-border/50 px-6 py-3">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-muted font-body font-light">
-                {start_date && end_date ? (
-                  `${numDays} day itinerary`
-                ) : (
-                  <span className="flex items-center gap-2">
-                    <Calendar size={14} strokeWidth={1.5} />
-                    Set trip dates to organize by day
-                  </span>
-                )}
-              </p>
-              <div className="flex gap-2">
-                <button 
-                  onClick={() => setIsMapExpanded(!isMapExpanded)}
-                  className={`px-4 py-2 text-sm rounded-xl transition-all duration-300 flex items-center gap-2 ${
-                    isMapExpanded 
-                      ? 'bg-primary text-white' 
-                      : 'bg-background border border-border/50 text-foreground hover:bg-moss-light'
-                  }`}
-                >
-                  <Map size={16} strokeWidth={1.5} />
-                  Map View
-                </button>
-                <button 
-                  onClick={handleExportPDF}
-                  className="px-4 py-2 text-sm text-white rounded-xl transition-all duration-300 flex items-center gap-2"
-                  style={{ backgroundColor: '#5C6B4A' }}
-                >
-                  <Download size={16} strokeWidth={1.5} />
-                  Export PDF
-                </button>
-                <button 
-                  onClick={handleShareTrip}
-                  className="px-4 py-2 text-sm rounded-xl transition-all duration-300 flex items-center gap-2 shadow-warm text-white"
-                  style={{ backgroundColor: shareStatus === 'copied' ? '#22c55e' : '#5C6B4A' }}
-                >
-                  {shareStatus === 'copied' ? (
-                    <>
-                      <Check size={16} strokeWidth={2} />
-                      Link Copied!
-                    </>
+            <div className="flex items-center justify-between gap-4">
+              {/* Left side - Info and hotel */}
+              <div className="flex items-center gap-4 flex-1 min-w-0">
+                <p className="text-sm text-muted font-body font-light flex-shrink-0">
+                  {start_date && end_date ? (
+                    `${numDays} day itinerary`
                   ) : (
-                    <>
-                      <Share2 size={16} strokeWidth={1.5} />
-                      Share Trip
-                    </>
+                    <span className="flex items-center gap-2">
+                      <Calendar size={14} strokeWidth={1.5} />
+                      Set dates
+                    </span>
                   )}
+                </p>
+                
+                {/* Hotel section - inline */}
+                {hotelSearchMode === 'none' && !trip.hotel_location && (
+                  <button
+                    onClick={() => onHotelSearchModeChange?.('search')}
+                    className="flex items-center gap-1.5 text-sm hover:opacity-70 transition-opacity"
+                    style={{ color: '#5C6B4A' }}
+                  >
+                    <Hotel size={14} strokeWidth={1.5} />
+                    <span>+ Hotel</span>
+                  </button>
+                )}
+                
+                {hotelSearchMode === 'none' && trip.hotel_location && (
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Hotel size={14} style={{ color: '#5C6B4A' }} strokeWidth={1.5} className="flex-shrink-0" />
+                    <span className="text-sm text-foreground truncate max-w-[150px]">
+                      {trip.hotel_name || 'Hotel'}
+                    </span>
+                    <button
+                      onClick={() => onHotelSearchModeChange?.('search')}
+                      className="text-xs hover:text-foreground transition-colors flex-shrink-0"
+                      style={{ color: '#5C6B4A' }}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={onHotelClear}
+                      className="text-xs text-muted hover:text-red-500 transition-colors flex-shrink-0"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                )}
+              </div>
+              
+              {/* Right side - Map toggle */}
+              <button 
+                onClick={() => setIsMapExpanded(!isMapExpanded)}
+                className={`px-4 py-2 text-sm rounded-xl transition-all duration-300 flex items-center gap-2 flex-shrink-0 ${
+                  isMapExpanded 
+                    ? 'bg-primary text-white' 
+                    : 'bg-background border border-border/50 text-foreground hover:bg-moss-light'
+                }`}
+              >
+                <Map size={16} strokeWidth={1.5} />
+                Map View
+              </button>
+            </div>
+            
+            {/* Hotel Search - expanded below when active */}
+            {hotelSearchMode === 'search' && (
+              <div className="mt-3 flex items-center gap-3 p-3 rounded-xl" style={{ backgroundColor: 'rgba(92, 107, 74, 0.05)' }}>
+                <Hotel size={16} style={{ color: '#5C6B4A' }} strokeWidth={1.5} />
+                <HotelSearch
+                  destination={trip.destination}
+                  onSelect={(hotel) => {
+                    onHotelSelect?.(hotel);
+                    onHotelSearchModeChange?.('none');
+                  }}
+                  onCancel={() => onHotelSearchModeChange?.('none')}
+                />
+              </div>
+            )}
+            
+            {hotelSearchMode === 'click' && (
+              <div className="mt-3 flex items-center gap-3 p-3 rounded-xl" style={{ backgroundColor: 'rgba(92, 107, 74, 0.05)' }}>
+                <Hotel size={16} style={{ color: '#5C6B4A' }} strokeWidth={1.5} />
+                <span className="text-sm font-medium" style={{ color: '#5C6B4A' }}>Click on map to place hotel</span>
+                <button
+                  onClick={() => onHotelSearchModeChange?.('none')}
+                  className="text-sm text-muted hover:text-foreground ml-2"
+                >
+                  Cancel
                 </button>
               </div>
-            </div>
+            )}
 
             {/* Map - Collapsible */}
             {isMapExpanded && (

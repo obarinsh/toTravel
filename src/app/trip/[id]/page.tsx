@@ -3,14 +3,14 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { motion } from 'motion/react';
-import { Map, Utensils, Sparkles, Hotel, Loader2 } from 'lucide-react';
+import { Map, Utensils, Sparkles, Loader2, Download, Share2, MoreVertical, Pencil } from 'lucide-react';
 import { Trip, Attraction, Coordinates } from '@/types';
 import ItineraryView from '@/components/ItineraryView';
 import QueryChat from '@/components/QueryChat';
 import DateRangePicker, { calculateDays, formatDate } from '@/components/DateRangePicker';
 import FoodTab from '@/components/FoodTab';
 import ActivitiesTab from '@/components/ActivitiesTab';
-import HotelSearch from '@/components/HotelSearch';
+import { exportTripToPDF } from '@/lib/pdfExport';
 
 type TabType = 'route' | 'food' | 'activities';
 
@@ -25,6 +25,40 @@ export default function TripPage() {
   const [hotelSearchMode, setHotelSearchMode] = useState<'none' | 'search' | 'click'>('none');
   const [isEditingDates, setIsEditingDates] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('route');
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  // Share trip functionality
+  const handleShareTrip = useCallback(async () => {
+    const tripUrl = window.location.href;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Trip to ${trip?.destination}`,
+          text: `Check out my trip to ${trip?.destination}!`,
+          url: tripUrl,
+        });
+        setIsMenuOpen(false);
+        return;
+      } catch {
+        // Fall back to clipboard
+      }
+    }
+    
+    try {
+      await navigator.clipboard.writeText(tripUrl);
+      alert('Link copied to clipboard!');
+    } catch {
+      const textArea = document.createElement('textarea');
+      textArea.value = tripUrl;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      alert('Link copied to clipboard!');
+    }
+    setIsMenuOpen(false);
+  }, [trip?.destination]);
 
   // Fetch trip data
   useEffect(() => {
@@ -198,173 +232,140 @@ export default function TripPage() {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
     >
-      {/* Header - City name, dates, and tabs */}
-      <div className="flex items-center justify-between gap-6 flex-wrap">
-        {/* Left side - City name and dates (only on route tab) */}
-        {activeTab === 'route' ? (
-          <div>
-            <h1 className="font-heading text-3xl font-semibold text-foreground tracking-tight">
-              {trip.destination}
-            </h1>
-            <div className="flex items-center gap-3 mt-1">
-              {trip.start_date && trip.end_date ? (
-                <>
-                  <span className="text-muted font-body font-light">
-                    {formatDate(trip.start_date)} - {formatDate(trip.end_date)}
-                  </span>
-                  {isEditingDates ? (
-                    <DateRangePicker
-                      startDate={trip.start_date}
-                      endDate={trip.end_date}
-                      onSave={handleSaveDates}
-                      onCancel={() => setIsEditingDates(false)}
-                    />
-                  ) : (
-                    <>
-                      <button
-                        onClick={() => setIsEditingDates(true)}
-                        className="text-xs hover:text-foreground transition-colors"
-                        style={{ color: '#5C6B4A' }}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={handleClearDates}
-                        className="text-xs text-muted hover:text-red-500 transition-colors"
-                      >
-                        Clear
-                      </button>
-                    </>
-                  )}
-                </>
-              ) : isEditingDates ? (
-                <DateRangePicker
-                  startDate={trip.start_date}
-                  endDate={trip.end_date}
-                  onSave={handleSaveDates}
-                  onCancel={() => setIsEditingDates(false)}
-                />
-              ) : (
-                <button
-                  onClick={() => setIsEditingDates(true)}
-                  className="text-sm hover:text-foreground font-body transition-colors"
-                  style={{ color: '#5C6B4A' }}
-                >
-                  + Add dates
-                </button>
-              )}
-              {isSaving && <span className="text-xs ml-2" style={{ color: '#5C6B4A' }}>Saving...</span>}
-            </div>
-          </div>
-        ) : (
-          <div />
-        )}
+      {/* Compact Header - Single row */}
+      <div className="flex items-center gap-4">
+        {/* Title and dates */}
+        <div className="flex items-baseline gap-2">
+          <h1 className="font-heading text-2xl font-semibold text-foreground tracking-tight">
+            {trip.destination}
+          </h1>
+          <button 
+            onClick={() => setIsEditingDates(true)}
+            className="hover:opacity-70 transition-opacity"
+          >
+            {trip.start_date && trip.end_date ? (
+              <span className="text-muted font-body text-sm">
+                {formatDate(trip.start_date)} – {formatDate(trip.end_date)}
+              </span>
+            ) : (
+              <span className="text-sm font-body" style={{ color: '#5C6B4A' }}>+ dates</span>
+            )}
+          </button>
+        </div>
 
-        {/* Right side - Tab Navigation - Bold pill style */}
-        <div className="flex gap-2 p-1 rounded-full" style={{ backgroundColor: '#E8EBE3' }}>
+        {/* Vertical divider */}
+        <div className="h-8 w-px" style={{ backgroundColor: '#E0E0DC' }} />
+
+        {/* Tab Navigation */}
+        <div className="flex gap-1 p-1 rounded-full" style={{ backgroundColor: '#E8EBE3' }}>
           <button
             onClick={() => setActiveTab('route')}
-            className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
               activeTab === 'route'
                 ? 'text-white shadow-sm'
-                : 'text-muted hover:text-foreground hover:bg-card'
+                : 'text-muted hover:text-foreground'
             }`}
             style={activeTab === 'route' ? { backgroundColor: '#5C6B4A' } : undefined}
           >
-            Route
+            <span className="flex items-center gap-1.5">
+              <Map size={14} strokeWidth={1.5} />
+              Route
+            </span>
           </button>
           <button
             onClick={() => setActiveTab('food')}
-            className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
               activeTab === 'food'
                 ? 'text-white shadow-sm'
-                : 'text-muted hover:text-foreground hover:bg-card'
+                : 'text-muted hover:text-foreground'
             }`}
             style={activeTab === 'food' ? { backgroundColor: '#5C6B4A' } : undefined}
           >
-            Food
+            <span className="flex items-center gap-1.5">
+              <Utensils size={14} strokeWidth={1.5} />
+              Food
+            </span>
           </button>
           <button
             onClick={() => setActiveTab('activities')}
-            className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
               activeTab === 'activities'
                 ? 'text-white shadow-sm'
-                : 'text-muted hover:text-foreground hover:bg-card'
+                : 'text-muted hover:text-foreground'
             }`}
             style={activeTab === 'activities' ? { backgroundColor: '#5C6B4A' } : undefined}
           >
-            Activities
+            <span className="flex items-center gap-1.5">
+              <Sparkles size={14} strokeWidth={1.5} />
+              Activities
+            </span>
           </button>
+        </div>
+
+        {/* Three-dot menu */}
+        <div className="relative ml-auto">
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+          >
+            <MoreVertical size={20} style={{ color: '#8B9082' }} />
+          </button>
+          
+          {isMenuOpen && (
+            <>
+              <div 
+                className="fixed inset-0 z-40"
+                onClick={() => setIsMenuOpen(false)}
+              />
+              <div className="absolute right-0 top-full mt-2 bg-white rounded-xl shadow-lg border border-border py-2 min-w-[180px] z-50">
+                <button
+                  onClick={handleShareTrip}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-gray-50 transition-colors"
+                >
+                  <Share2 size={18} style={{ color: '#8B9082' }} strokeWidth={1.5} />
+                  Share
+                </button>
+                <button
+                  onClick={() => {
+                    exportTripToPDF({ trip, startDate: trip.start_date, endDate: trip.end_date });
+                    setIsMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-gray-50 transition-colors"
+                >
+                  <Download size={18} style={{ color: '#8B9082' }} strokeWidth={1.5} />
+                  Export PDF
+                </button>
+                <button
+                  onClick={() => {
+                    setIsEditingDates(true);
+                    setIsMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-gray-50 transition-colors"
+                >
+                  <Pencil size={18} style={{ color: '#8B9082' }} strokeWidth={1.5} />
+                  Edit details
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
-      {/* Hotel controls - only show on route tab */}
-      {activeTab === 'route' && (
-        <div className="flex items-center gap-3 text-sm">
-          <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(92, 107, 74, 0.1)' }}>
-            <Hotel size={16} style={{ color: '#5C6B4A' }} strokeWidth={1.5} />
-          </div>
-          {hotelSearchMode === 'search' ? (
-            <HotelSearch
-              destination={trip.destination}
-              onSelect={handleHotelSelect}
-              onCancel={() => setHotelSearchMode('none')}
+      {/* Date Picker Modal */}
+      {isEditingDates && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+            onClick={() => setIsEditingDates(false)}
+          />
+          <div className="relative z-10">
+            <DateRangePicker
+              startDate={trip.start_date}
+              endDate={trip.end_date}
+              onSave={handleSaveDates}
+              onCancel={() => setIsEditingDates(false)}
             />
-          ) : hotelSearchMode === 'click' ? (
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium" style={{ color: '#5C6B4A' }}>Click map to place hotel</span>
-              <button
-                onClick={() => setHotelSearchMode('none')}
-                className="text-xs text-muted hover:text-foreground"
-              >
-                Cancel
-              </button>
-            </div>
-          ) : trip.hotel_location ? (
-            <div className="flex items-center gap-2">
-              <div className="flex flex-col">
-                <span className="text-foreground font-body font-medium">
-                  {trip.hotel_name || 'Hotel set'}
-                </span>
-                {trip.hotel_address && (
-                  <span className="text-xs text-muted font-body font-light truncate max-w-[300px]">
-                    {trip.hotel_address}
-                  </span>
-                )}
-              </div>
-              <button
-                onClick={() => setHotelSearchMode('search')}
-                className="text-xs hover:text-foreground transition-colors"
-                style={{ color: '#5C6B4A' }}
-              >
-                Edit
-              </button>
-              <button
-                onClick={handleClearHotel}
-                className="text-xs text-muted hover:text-red-500 transition-colors"
-              >
-                Clear
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 text-sm">
-              <button
-                onClick={() => setHotelSearchMode('search')}
-                className="hover:text-foreground font-medium transition-colors"
-                style={{ color: '#5C6B4A' }}
-              >
-                Search hotel
-              </button>
-              <span className="text-muted">or</span>
-              <button
-                onClick={() => setHotelSearchMode('click')}
-                className="hover:text-foreground font-medium transition-colors"
-                style={{ color: '#5C6B4A' }}
-              >
-                Click on map
-              </button>
-            </div>
-          )}
+          </div>
         </div>
       )}
 
@@ -378,6 +379,10 @@ export default function TripPage() {
           onRemoveAttraction={handleRemoveAttraction}
           onMapClick={handleMapClickForHotel}
           isSelectingHotel={hotelSearchMode === 'click'}
+          onHotelSelect={handleHotelSelect}
+          onHotelClear={handleClearHotel}
+          hotelSearchMode={hotelSearchMode}
+          onHotelSearchModeChange={setHotelSearchMode}
         />
       )}
 

@@ -26,13 +26,13 @@ export default function Header() {
 
   return (
     <header 
-      className={`fixed top-0 left-0 right-0 z-50 px-6 md:px-8 py-5 transition-all duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-50 px-6 md:px-12 lg:px-16 py-5 transition-all duration-300 ${
         showSolidHeader 
           ? 'bg-white/95 backdrop-blur-sm shadow-sm' 
           : 'bg-transparent'
       }`}
     >
-      <div className="max-w-6xl mx-auto flex items-center justify-between">
+      <div className="flex items-center justify-between">
         <Link 
           href="/" 
           className={`text-sm font-medium transition-colors ${

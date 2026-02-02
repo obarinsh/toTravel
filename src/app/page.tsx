@@ -12,19 +12,34 @@ import { GeocodingResult, Coordinates } from '@/types';
 export default function Home() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [tripName, setTripName] = useState('');
   const [selectedDestination, setSelectedDestination] = useState<{
     name: string;
+    fullName: string;
     coordinates: Coordinates;
   } | null>(null);
 
   const handleDestinationSelect = (result: GeocodingResult) => {
+    const parts = result.display_name.split(',').map(s => s.trim());
+    const cityName = parts[0];
+    // Get country (usually the last part)
+    const countryName = parts.length > 1 ? parts[parts.length - 1] : '';
+    
     setSelectedDestination({
-      name: result.display_name.split(',')[0],
+      name: cityName,
+      fullName: countryName ? `${cityName}, ${countryName}` : cityName,
       coordinates: {
         lat: parseFloat(result.lat),
         lng: parseFloat(result.lon),
       },
     });
+    // Keep trip name empty - let user fill it if they want
+    setTripName('');
+  };
+  
+  const handleClearSelection = () => {
+    setSelectedDestination(null);
+    setTripName('');
   };
 
   const handlePlanTrip = async () => {
@@ -52,7 +67,8 @@ export default function Home() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          destination: selectedDestination.name,
+          name: tripName.trim() || null,
+          destination: selectedDestination.fullName,
           destination_coordinates: selectedDestination.coordinates,
           attractions,
         }),
@@ -94,7 +110,7 @@ export default function Home() {
         </div>
 
         {/* Hero Content - Large typography */}
-        <div className="relative h-full flex flex-col justify-center px-8 md:px-16 lg:px-24">
+        <div className="relative h-full flex flex-col justify-center px-8 md:px-16 lg:px-24 pt-[73px]">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -102,68 +118,93 @@ export default function Home() {
             className="max-w-4xl"
           >
             {/* Large headline */}
-            <h1 className="text-white/50 leading-[1.4] font-body text-4xl sm:text-5xl md:text-7xl lg:text-8xl" style={{ fontWeight: 400, letterSpacing: '0.25em' }}>
+            <h1 className="text-white/50 leading-[1.4] font-body text-4xl sm:text-5xl md:text-7xl lg:text-8xl mb-8 md:mb-12" style={{ fontWeight: 400, letterSpacing: '0.25em' }}>
               <span className="block">YOUR</span>
               <span className="block">JOURNEY</span>
               <span className="block">BEGINS</span>
             </h1>
-          </motion.div>
-        </div>
 
-        {/* Search bar - bottom left */}
-        <div className="absolute bottom-12 md:bottom-16 left-8 md:left-16 lg:left-24 right-8 md:right-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
-            className="w-full md:w-[500px] lg:w-[580px]"
-          >
-            <SearchBar
-              onSelect={handleDestinationSelect}
-              placeholder="Search any destination..."
-              disabled={isLoading}
-              variant="hero"
-            />
+            {/* Search bar - below headline, in same container */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.3 }}
+              className="w-full md:w-[500px] lg:w-[580px]"
+            >
+            {/* Show search bar only when no destination selected */}
+            {!selectedDestination && (
+              <SearchBar
+                onSelect={handleDestinationSelect}
+                placeholder="Search any destination..."
+                disabled={isLoading}
+                variant="hero"
+              />
+            )}
 
-            {/* Selected destination card */}
+            {/* Selected destination card with trip name input - same style as search bar */}
             {selectedDestination && (
               <motion.div 
-                className="mt-4 bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-2xl"
+                className="flex flex-col gap-8 pt-6"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
               >
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-xs tracking-[0.2em] uppercase mb-1" style={{ color: '#8B9082' }}>Selected</p>
-                    <p className="text-xl font-medium" style={{ color: '#4A4F45' }}>
-                      {selectedDestination.name}
-                    </p>
+                {/* Destination display - same style as search bar */}
+                <div className="relative">
+                  <span className="absolute -top-5 left-6 text-xs text-white/50 font-light tracking-wider uppercase">Destination</span>
+                  <div 
+                    className="relative w-full pl-6 pr-16 py-5 rounded-full backdrop-blur-md font-light tracking-wide flex items-center justify-between"
+                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.14)' }}
+                  >
+                    <span className="text-white text-base">{selectedDestination.fullName}</span>
+                    <button
+                      onClick={handleClearSelection}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full flex items-center justify-center transition-all hover:scale-105"
+                      style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="#FFFFFF" strokeWidth={2} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
                   </div>
-                  <button
+                </div>
+
+                {/* Trip name input - same style as search bar */}
+                <div className="relative">
+                  <span className="absolute -top-5 left-6 text-xs text-white/50 font-light tracking-wider uppercase">Trip Name (optional)</span>
+                  <input
+                    type="text"
+                    value={tripName}
+                    onChange={(e) => setTripName(e.target.value)}
+                    placeholder="Give your trip a name..."
+                    className="w-full pl-6 pr-16 py-5 rounded-full backdrop-blur-md text-base focus:outline-none font-light tracking-wide placeholder:text-white/40"
+                    style={{ 
+                      backgroundColor: 'rgba(255, 255, 255, 0.14)',
+                      color: '#FFFFFF',
+                    }}
+                  />
+                  <button 
                     onClick={handlePlanTrip}
                     disabled={isLoading}
-                    className="flex items-center gap-2 px-5 py-3 rounded-full hover:scale-[1.02] disabled:opacity-50 transition-all duration-300 font-medium text-sm"
-                    style={{ backgroundColor: '#E4B84A', color: '#4A4F45' }}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full flex items-center justify-center transition-all hover:scale-105 disabled:opacity-50"
+                    style={{ backgroundColor: '#E4B84A' }}
                   >
                     {isLoading ? (
-                      <>
-                        <Loader2 size={18} className="animate-spin" />
-                        <span className="hidden sm:inline">Planning...</span>
-                      </>
+                      <Loader2 size={20} className="animate-spin" style={{ color: '#4A4F45' }} />
                     ) : (
-                      <>
-                        <span>Start Planning</span>
-                        <ArrowRight size={18} />
-                      </>
+                      <svg className="w-5 h-5" fill="none" stroke="#4A4F45" strokeWidth={2.5} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                      </svg>
                     )}
                   </button>
                 </div>
+
                 {isLoading && (
-                  <p className="text-xs mt-3" style={{ color: '#8B9082' }}>Generating top attractions... This may take 15-30 seconds</p>
+                  <p className="text-xs text-white/60 text-center font-light tracking-wide">Generating top attractions... This may take 15-30 seconds</p>
                 )}
               </motion.div>
             )}
+          </motion.div>
           </motion.div>
         </div>
       </section>
@@ -382,24 +423,34 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 md:py-32 px-6 md:px-8">
+      <section className="py-20 px-6 md:px-8" style={{ backgroundColor: '#FAFAF8' }}>
         <motion.div 
-          className="max-w-4xl mx-auto text-center rounded-3xl py-16 md:py-20 px-6 md:px-8"
-          style={{ backgroundColor: '#5C6B4A' }}
+          className="max-w-4xl mx-auto text-center"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
         >
-          <h2 className="font-heading text-3xl md:text-4xl font-light text-white mb-4">
+          {/* Accent line */}
+          <div className="w-12 h-[2px] mx-auto mb-8" style={{ backgroundColor: '#E4B84A' }} />
+          
+          {/* Headline */}
+          <h2 
+            className="font-heading text-4xl font-light mb-4"
+            style={{ color: '#2C2C2A' }}
+          >
             Ready to explore?
           </h2>
-          <p className="text-white/70 mb-8 max-w-md mx-auto">
+          
+          {/* Subtext */}
+          <p className="mb-10 max-w-md mx-auto" style={{ color: '#9A9A94' }}>
             Join thousands of travelers planning their perfect trips.
           </p>
+          
+          {/* Green button */}
           <button 
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="px-8 py-4 rounded-full text-sm font-medium transition-all hover:scale-105"
-            style={{ backgroundColor: '#E4B84A', color: '#4A4F45' }}
+            className="px-8 py-3.5 rounded-full text-sm font-medium text-white transition-all hover:scale-105 hover:opacity-90"
+            style={{ backgroundColor: '#5C6B4A' }}
           >
             Start your journey
           </button>
