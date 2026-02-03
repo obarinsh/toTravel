@@ -176,8 +176,9 @@ export default function ActivitiesTab({
 }: ActivitiesTabProps) {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [activities, setActivities] = useState<ActivityCard[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Start with loading true
   const [hasSearched, setHasSearched] = useState(false);
+  const [hasAutoLoaded, setHasAutoLoaded] = useState(false);
 
   const parseActivitiesFromResponse = (response: string, category: string, dest: string): ActivityCard[] => {
     const activities: ActivityCard[] = [];
@@ -327,11 +328,14 @@ Make sure each activity has a complete name, a real street address in ${destinat
 
   // Auto-load activities on first mount
   useEffect(() => {
-    if (destination && !hasSearched && !isLoading) {
+    if (destination && !hasAutoLoaded) {
+      setHasAutoLoaded(true);
       searchActivities();
+    } else if (!destination) {
+      setIsLoading(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [destination]);
 
   const handleAddActivity = async (activity: ActivityCard, index: number) => {
     // Mark as adding (loading state)
@@ -421,8 +425,8 @@ Make sure each activity has a complete name, a real street address in ${destinat
         </div>
       </div>
 
-      {/* Quick Ideas - editorial style */}
-      {!hasSearched && !isLoading && (
+      {/* Quick Ideas - editorial style - only show after initial load complete and no results yet */}
+      {hasSearched && !isLoading && activities.length === 0 && (
         <div>
           <p className="text-[10px] tracking-[0.25em] uppercase text-muted mb-5 font-body">
             Quick Ideas
@@ -505,7 +509,7 @@ Make sure each activity has a complete name, a real street address in ${destinat
       )}
 
       {/* Loading state on initial load */}
-      {!hasSearched && isLoading && (
+      {isLoading && (
         <motion.div 
           className="text-center py-12"
           initial={{ opacity: 0 }}

@@ -8,6 +8,7 @@ interface DateRangePickerProps {
   endDate?: string | null;
   onSave: (startDate: string, endDate: string) => void;
   onCancel: () => void;
+  required?: boolean;
 }
 
 export default function DateRangePicker({
@@ -15,6 +16,7 @@ export default function DateRangePicker({
   endDate,
   onSave,
   onCancel,
+  required = false,
 }: DateRangePickerProps) {
   const [start, setStart] = useState(startDate || '');
   const [end, setEnd] = useState(endDate || '');
@@ -41,16 +43,24 @@ export default function DateRangePicker({
           >
             <Calendar size={18} style={{ color: '#E4B84A' }} />
           </div>
-          <h3 className="font-body text-lg" style={{ fontWeight: 500, color: '#4A4F45' }}>
-            Select Dates
-          </h3>
+          <div>
+            <h3 className="font-body text-lg" style={{ fontWeight: 500, color: '#4A4F45' }}>
+              Select Dates
+            </h3>
+            {required && !startDate && !endDate && (
+              <p className="text-xs" style={{ color: '#E4B84A' }}>Required to continue</p>
+            )}
+          </div>
         </div>
-        <button 
-          onClick={onCancel}
-          className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-        >
-          <X size={18} style={{ color: '#8B9082' }} />
-        </button>
+        {/* Only show close button if dates exist or not required */}
+        {(!required || (startDate && endDate)) && (
+          <button 
+            onClick={onCancel}
+            className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+          >
+            <X size={18} style={{ color: '#8B9082' }} />
+          </button>
+        )}
       </div>
 
       <form onSubmit={handleSubmit}>
@@ -126,17 +136,20 @@ export default function DateRangePicker({
           >
             Save Dates
           </button>
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-6 py-3 rounded-full text-sm font-medium transition-colors border"
-            style={{ 
-              borderColor: '#E8EBE3',
-              color: '#8B9082',
-            }}
-          >
-            Cancel
-          </button>
+          {/* Only show cancel button if dates exist or not required */}
+          {(!required || (startDate && endDate)) && (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="px-6 py-3 rounded-full text-sm font-medium transition-colors border"
+              style={{ 
+                borderColor: '#E8EBE3',
+                color: '#8B9082',
+              }}
+            >
+              Cancel
+            </button>
+          )}
         </div>
       </form>
     </div>

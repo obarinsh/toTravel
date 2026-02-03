@@ -12,7 +12,6 @@ import { GeocodingResult, Coordinates } from '@/types';
 export default function Home() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [tripName, setTripName] = useState('');
   const [selectedDestination, setSelectedDestination] = useState<{
     name: string;
     fullName: string;
@@ -33,13 +32,10 @@ export default function Home() {
         lng: parseFloat(result.lon),
       },
     });
-    // Keep trip name empty - let user fill it if they want
-    setTripName('');
   };
   
   const handleClearSelection = () => {
     setSelectedDestination(null);
-    setTripName('');
   };
 
   const handlePlanTrip = async () => {
@@ -67,7 +63,7 @@ export default function Home() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: tripName.trim() || null,
+          name: null,
           destination: selectedDestination.fullName,
           destination_coordinates: selectedDestination.coordinates,
           attractions,
@@ -102,6 +98,7 @@ export default function Home() {
             src="/img/landing.jpg"
             alt="Travel destination"
             fill
+            sizes="100vw"
             className="object-cover"
             priority
           />
@@ -141,66 +138,53 @@ export default function Home() {
               />
             )}
 
-            {/* Selected destination card with trip name input - same style as search bar */}
+            {/* Selected destination - ready to plan */}
             {selectedDestination && (
               <motion.div 
-                className="flex flex-col gap-8 pt-6"
+                className="relative"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
               >
-                {/* Destination display - same style as search bar */}
-                <div className="relative">
-                  <span className="absolute -top-5 left-6 text-xs text-white/50 font-light tracking-wider uppercase">Destination</span>
-                  <div 
-                    className="relative w-full pl-6 pr-16 py-5 rounded-full backdrop-blur-md font-light tracking-wide flex items-center justify-between"
-                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.14)' }}
-                  >
-                    <span className="text-white text-base">{selectedDestination.fullName}</span>
+                {/* Destination display with plan button */}
+                <div 
+                  className="relative w-full pl-6 pr-16 py-5 rounded-full backdrop-blur-md font-light tracking-wide flex items-center justify-between"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.14)' }}
+                >
+                  <span className="text-white text-base">{selectedDestination.fullName}</span>
+                  <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-2">
                     <button
                       onClick={handleClearSelection}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full flex items-center justify-center transition-all hover:scale-105"
+                      disabled={isLoading}
+                      className="w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-105 disabled:opacity-50"
                       style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
                     >
                       <svg className="w-4 h-4" fill="none" stroke="#FFFFFF" strokeWidth={2} viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </button>
+                    <button 
+                      onClick={handlePlanTrip}
+                      disabled={isLoading}
+                      className="w-11 h-11 rounded-full flex items-center justify-center transition-all hover:scale-105 disabled:opacity-50"
+                      style={{ backgroundColor: '#E4B84A' }}
+                    >
+                      {isLoading ? (
+                        <Loader2 size={20} className="animate-spin" style={{ color: '#4A4F45' }} />
+                      ) : (
+                        <svg className="w-5 h-5" fill="none" stroke="#4A4F45" strokeWidth={2.5} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                      )}
+                    </button>
                   </div>
                 </div>
 
-                {/* Trip name input - same style as search bar */}
-                <div className="relative">
-                  <span className="absolute -top-5 left-6 text-xs text-white/50 font-light tracking-wider uppercase">Trip Name (optional)</span>
-                  <input
-                    type="text"
-                    value={tripName}
-                    onChange={(e) => setTripName(e.target.value)}
-                    placeholder="Give your trip a name..."
-                    className="w-full pl-6 pr-16 py-5 rounded-full backdrop-blur-md text-base focus:outline-none font-light tracking-wide placeholder:text-white/40"
-                    style={{ 
-                      backgroundColor: 'rgba(255, 255, 255, 0.14)',
-                      color: '#FFFFFF',
-                    }}
-                  />
-                  <button 
-                    onClick={handlePlanTrip}
-                    disabled={isLoading}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full flex items-center justify-center transition-all hover:scale-105 disabled:opacity-50"
-                    style={{ backgroundColor: '#E4B84A' }}
-                  >
-                    {isLoading ? (
-                      <Loader2 size={20} className="animate-spin" style={{ color: '#4A4F45' }} />
-                    ) : (
-                      <svg className="w-5 h-5" fill="none" stroke="#4A4F45" strokeWidth={2.5} viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                      </svg>
-                    )}
-                  </button>
-                </div>
-
+                {/* Loading message - absolute positioned to not affect layout */}
                 {isLoading && (
-                  <p className="text-xs text-white/60 text-center font-light tracking-wide">Generating top attractions... This may take 15-30 seconds</p>
+                  <p className="absolute left-0 right-0 top-full mt-4 text-xs text-white/60 text-center font-light tracking-wide">
+                    Generating top attractions... This may take 15-30 seconds
+                  </p>
                 )}
               </motion.div>
             )}
@@ -253,6 +237,7 @@ export default function Home() {
                   src="https://images.unsplash.com/photo-1528127269322-539801943592?w=800&q=80"
                   alt="Travel destination"
                   fill
+                  sizes="(max-width: 1024px) 100vw, 58vw"
                   className="object-cover"
                 />
               </div>
@@ -318,6 +303,7 @@ export default function Home() {
                 src={trendingDestinations[0].image}
                 alt={trendingDestinations[0].name}
                 fill
+                sizes="(max-width: 768px) 100vw, 50vw"
                 className="object-cover group-hover:scale-105 transition-transform duration-700"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0" />
@@ -341,6 +327,7 @@ export default function Home() {
                 src={trendingDestinations[1].image}
                 alt={trendingDestinations[1].name}
                 fill
+                sizes="(max-width: 768px) 50vw, 25vw"
                 className="object-cover group-hover:scale-105 transition-transform duration-700"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/0 to-black/0" />
@@ -364,6 +351,7 @@ export default function Home() {
                 src={trendingDestinations[2].image}
                 alt={trendingDestinations[2].name}
                 fill
+                sizes="(max-width: 768px) 50vw, 25vw"
                 className="object-cover group-hover:scale-105 transition-transform duration-700"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/0 to-black/0" />
@@ -387,6 +375,7 @@ export default function Home() {
                 src={trendingDestinations[3].image}
                 alt={trendingDestinations[3].name}
                 fill
+                sizes="(max-width: 768px) 50vw, 25vw"
                 className="object-cover group-hover:scale-105 transition-transform duration-700"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/0 to-black/0" />
@@ -410,6 +399,7 @@ export default function Home() {
                 src={trendingDestinations[4].image}
                 alt={trendingDestinations[4].name}
                 fill
+                sizes="(max-width: 768px) 50vw, 25vw"
                 className="object-cover group-hover:scale-105 transition-transform duration-700"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/0 to-black/0" />

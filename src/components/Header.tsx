@@ -73,14 +73,6 @@ export default function Header() {
           toTravel
         </Link>
         <div className="flex items-center gap-6 md:gap-8">
-          <Link 
-            href="/" 
-            className={`text-sm transition-colors hover:opacity-70 ${textClass}`}
-            style={textStyle}
-          >
-            Explore
-          </Link>
-          
           {!isLoading && (
             <>
               {user ? (

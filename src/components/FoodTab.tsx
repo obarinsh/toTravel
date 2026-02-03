@@ -200,8 +200,9 @@ export default function FoodTab({ destination, hotelLocation, onAddRestaurant }:
   const [dietaryFilters, setDietaryFilters] = useState<string[]>([]);
   const [cuisineFilters, setCuisineFilters] = useState<string[]>([]);
   const [restaurants, setRestaurants] = useState<RestaurantCard[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Start with loading true
   const [hasSearched, setHasSearched] = useState(false);
+  const [hasAutoLoaded, setHasAutoLoaded] = useState(false);
 
   const toggleDietaryFilter = (filter: string) => {
     setDietaryFilters(prev => 
@@ -388,11 +389,14 @@ Make sure each restaurant has a real name, cuisine type, price range, and addres
 
   // Auto-load restaurants on first mount
   useEffect(() => {
-    if (destination && !hasSearched && !isLoading) {
+    if (destination && !hasAutoLoaded) {
+      setHasAutoLoaded(true);
       searchRestaurants();
+    } else if (!destination) {
+      setIsLoading(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [destination]);
 
   const handleAddRestaurant = async (restaurant: RestaurantCard, index: number) => {
     if (!onAddRestaurant) return;
@@ -574,7 +578,7 @@ Make sure each restaurant has a real name, cuisine type, price range, and addres
       )}
 
       {/* Loading state on initial load */}
-      {!hasSearched && isLoading && (
+      {isLoading && (
         <motion.div 
           className="text-center py-12"
           initial={{ opacity: 0 }}

@@ -49,14 +49,9 @@ export default function RootLayout({
           </main>
 
           {/* Minimal Footer */}
-          <footer className="py-12 px-6 md:px-12 lg:px-16 border-t border-moss-light">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <span className="text-sm text-mist">© 2025 toTravel</span>
-              <div className="flex gap-8">
-                <span className="text-sm cursor-pointer hover:opacity-70 transition-opacity text-mist">About</span>
-                <span className="text-sm cursor-pointer hover:opacity-70 transition-opacity text-mist">Privacy</span>
-                <span className="text-sm cursor-pointer hover:opacity-70 transition-opacity text-mist">Terms</span>
-              </div>
+          <footer className="py-4 px-6">
+            <div className="flex items-center justify-center">
+              <span className="text-xs text-mist">© 2025 toTravel</span>
             </div>
           </footer>
         </AuthProvider>

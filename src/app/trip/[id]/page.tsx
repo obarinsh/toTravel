@@ -3,10 +3,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { motion } from 'motion/react';
-import { Map, Utensils, Sparkles, Loader2, Download, Share2, MoreVertical, Pencil } from 'lucide-react';
+import { Map, Utensils, Sparkles, Loader2, Download, Share2, MoreVertical, Pencil, Check, X } from 'lucide-react';
 import { Trip, Attraction, Coordinates } from '@/types';
 import ItineraryView from '@/components/ItineraryView';
-import QueryChat from '@/components/QueryChat';
 import DateRangePicker, { calculateDays, formatDate } from '@/components/DateRangePicker';
 import FoodTab from '@/components/FoodTab';
 import ActivitiesTab from '@/components/ActivitiesTab';
@@ -26,6 +25,8 @@ export default function TripPage() {
   const [isEditingDates, setIsEditingDates] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('route');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState('');
 
   // Share trip functionality
   const handleShareTrip = useCallback(async () => {
@@ -69,6 +70,10 @@ export default function TripPage() {
         
         if (data.trip) {
           setTrip(data.trip);
+          // Auto-open date picker if dates are not set
+          if (!data.trip.start_date || !data.trip.end_date) {
+            setIsEditingDates(true);
+          }
         }
       } catch (error) {
         console.error('Error fetching trip:', error);
@@ -113,14 +118,21 @@ export default function TripPage() {
     setIsEditingDates(false);
   };
 
-  const handleClearDates = () => {
+  const handleSaveName = () => {
     if (!trip) return;
-    
-    // Clear dates and reset all attractions to unassigned
-    const resetAttractions = trip.attractions.map((a) => ({ ...a, day: null }));
-    setTrip({ ...trip, start_date: null, end_date: null, attractions: resetAttractions });
-    saveTrip({ start_date: null, end_date: null, attractions: resetAttractions });
+    const newName = editedName.trim() || null;
+    setTrip({ ...trip, name: newName });
+    saveTrip({ name: newName });
+    setIsEditingName(false);
   };
+
+  const handleStartEditingName = () => {
+    if (!trip) return;
+    setEditedName(trip.name || '');
+    setIsEditingName(true);
+  };
+
+  // Dates are required - no clear dates function needed
 
   const handleRemoveAttraction = (attractionId: string) => {
     if (!trip) return;
@@ -235,22 +247,71 @@ export default function TripPage() {
       {/* Compact Header - Single row */}
       <div className="flex items-center gap-4">
         {/* Title and dates */}
-        <div className="flex items-baseline gap-2">
-          <h1 className="font-heading text-2xl font-semibold text-foreground tracking-tight">
-            {trip.destination}
-          </h1>
-          <button 
-            onClick={() => setIsEditingDates(true)}
-            className="hover:opacity-70 transition-opacity"
-          >
-            {trip.start_date && trip.end_date ? (
-              <span className="text-muted font-body text-sm">
-                {formatDate(trip.start_date)} – {formatDate(trip.end_date)}
-              </span>
+        <div className="flex flex-col">
+          {/* Trip name with edit functionality */}
+          <div className="flex items-center gap-2">
+            {isEditingName ? (
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={editedName}
+                  onChange={(e) => setEditedName(e.target.value)}
+                  placeholder={trip.destination}
+                  className="font-heading text-2xl font-semibold text-foreground tracking-tight bg-transparent border-b-2 border-secondary focus:outline-none min-w-[200px]"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSaveName();
+                    if (e.key === 'Escape') setIsEditingName(false);
+                  }}
+                />
+                <button
+                  onClick={handleSaveName}
+                  className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+                >
+                  <Check size={18} style={{ color: '#5C6B4A' }} />
+                </button>
+                <button
+                  onClick={() => setIsEditingName(false)}
+                  className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+                >
+                  <X size={18} style={{ color: '#8B9082' }} />
+                </button>
+              </div>
             ) : (
-              <span className="text-sm font-body" style={{ color: '#5C6B4A' }}>+ dates</span>
+              <>
+                <h1 className="font-heading text-2xl font-semibold text-foreground tracking-tight">
+                  {trip.name || trip.destination}
+                </h1>
+                <button
+                  onClick={handleStartEditingName}
+                  className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+                >
+                  <Pencil size={14} style={{ color: '#8B9082' }} />
+                </button>
+              </>
             )}
-          </button>
+          </div>
+          {/* Destination and dates row */}
+          <div className="flex items-center gap-2">
+            {trip.name && (
+              <span className="text-muted font-body text-sm">{trip.destination}</span>
+            )}
+            {trip.name && trip.start_date && trip.end_date && (
+              <span className="text-muted">·</span>
+            )}
+            <button 
+              onClick={() => setIsEditingDates(true)}
+              className="hover:opacity-70 transition-opacity"
+            >
+              {trip.start_date && trip.end_date ? (
+                <span className="text-muted font-body text-sm">
+                  {formatDate(trip.start_date)} – {formatDate(trip.end_date)}
+                </span>
+              ) : (
+                <span className="text-sm font-body" style={{ color: '#5C6B4A' }}>+ dates</span>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Vertical divider */}
@@ -355,8 +416,14 @@ export default function TripPage() {
       {isEditingDates && (
         <div className="fixed inset-0 flex items-center justify-center p-4" style={{ zIndex: 9999 }}>
           <div 
-            className="absolute inset-0 bg-black/30 backdrop-blur-sm"
-            onClick={() => setIsEditingDates(false)}
+            className="absolute inset-0"
+            style={{ backgroundColor: 'rgba(107, 114, 99, 0.85)' }}
+            onClick={() => {
+              // Only allow closing if dates are already set
+              if (trip.start_date && trip.end_date) {
+                setIsEditingDates(false);
+              }
+            }}
           />
           <div className="relative" style={{ zIndex: 10000 }}>
             <DateRangePicker
@@ -364,6 +431,7 @@ export default function TripPage() {
               endDate={trip.end_date}
               onSave={handleSaveDates}
               onCancel={() => setIsEditingDates(false)}
+              required={!trip.start_date || !trip.end_date}
             />
           </div>
         </div>
@@ -419,11 +487,6 @@ export default function TripPage() {
         />
       )}
 
-      {/* Query chat - floating */}
-      <QueryChat
-        destination={trip.destination}
-        hotelLocation={trip.hotel_location}
-      />
     </motion.div>
   );
 }
