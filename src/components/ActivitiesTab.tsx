@@ -325,6 +325,14 @@ Make sure each activity has a complete name, a real street address in ${destinat
     }
   };
 
+  // Auto-load activities on first mount
+  useEffect(() => {
+    if (destination && !hasSearched && !isLoading) {
+      searchActivities();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleAddActivity = async (activity: ActivityCard, index: number) => {
     // Mark as adding (loading state)
     setActivities(prev => prev.map((a, i) => 
@@ -414,7 +422,7 @@ Make sure each activity has a complete name, a real street address in ${destinat
       </div>
 
       {/* Quick Ideas - editorial style */}
-      {!hasSearched && (
+      {!hasSearched && !isLoading && (
         <div>
           <p className="text-[10px] tracking-[0.25em] uppercase text-muted mb-5 font-body">
             Quick Ideas
@@ -496,16 +504,15 @@ Make sure each activity has a complete name, a real street address in ${destinat
         </motion.div>
       )}
 
-      {/* Empty state */}
-      {!hasSearched && (
+      {/* Loading state on initial load */}
+      {!hasSearched && isLoading && (
         <motion.div 
           className="text-center py-12"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
         >
-          <p className="font-heading text-lg font-light mb-2 text-foreground">Discover new experiences</p>
-          <p className="text-sm text-muted font-body font-light">Select a category or quick idea above</p>
+          <Loader2 size={24} className="animate-spin mx-auto mb-3" style={{ color: '#5C6B4A' }} />
+          <p className="text-sm text-muted font-body font-light">Loading activity recommendations...</p>
         </motion.div>
       )}
     </motion.div>

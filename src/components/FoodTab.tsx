@@ -386,6 +386,14 @@ Make sure each restaurant has a real name, cuisine type, price range, and addres
     return restaurants;
   };
 
+  // Auto-load restaurants on first mount
+  useEffect(() => {
+    if (destination && !hasSearched && !isLoading) {
+      searchRestaurants();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleAddRestaurant = async (restaurant: RestaurantCard, index: number) => {
     if (!onAddRestaurant) return;
 
@@ -565,16 +573,15 @@ Make sure each restaurant has a real name, cuisine type, price range, and addres
         </motion.div>
       )}
 
-      {/* Empty state */}
-      {!hasSearched && (
+      {/* Loading state on initial load */}
+      {!hasSearched && isLoading && (
         <motion.div 
           className="text-center py-12"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
         >
-          <p className="font-heading text-lg font-light mb-2 text-foreground">Find the perfect restaurant</p>
-          <p className="text-sm text-muted font-body font-light">Select your preferences above</p>
+          <Loader2 size={24} className="animate-spin mx-auto mb-3" style={{ color: '#5C6B4A' }} />
+          <p className="text-sm text-muted font-body font-light">Loading restaurant recommendations...</p>
         </motion.div>
       )}
     </motion.div>
