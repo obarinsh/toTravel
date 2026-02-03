@@ -120,9 +120,9 @@ export default function TripPage() {
 
   const handleSaveName = () => {
     if (!trip) return;
-    const newName = editedName.trim() || null;
+    const newName = editedName.trim() || undefined;
     setTrip({ ...trip, name: newName });
-    saveTrip({ name: newName });
+    saveTrip({ name: newName ?? null });
     setIsEditingName(false);
   };
 
