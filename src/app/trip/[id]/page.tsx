@@ -122,7 +122,7 @@ export default function TripPage() {
     if (!trip) return;
     const newName = editedName.trim() || undefined;
     setTrip({ ...trip, name: newName });
-    saveTrip({ name: newName ?? null });
+    saveTrip({ name: newName });
     setIsEditingName(false);
   };
 
