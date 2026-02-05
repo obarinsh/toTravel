@@ -247,6 +247,7 @@ export default function TripPage() {
           trip={trip}
           onAttractionsChange={handleAttractionsChange}
           onMenuOpen={() => setIsMenuOpen(true)}
+          onEditDates={() => setIsEditingDates(true)}
         />
         {/* Mobile Menu Overlay */}
         {isMenuOpen && (

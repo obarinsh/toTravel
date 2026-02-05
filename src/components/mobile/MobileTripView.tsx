@@ -17,12 +17,14 @@ interface MobileTripViewProps {
   trip: Trip;
   onAttractionsChange: (attractions: Attraction[]) => void;
   onMenuOpen: () => void;
+  onEditDates: () => void;
 }
 
 export default function MobileTripView({
   trip,
   onAttractionsChange,
   onMenuOpen,
+  onEditDates,
 }: MobileTripViewProps) {
   const [activeTab, setActiveTab] = useState<MobileTabType>('itinerary');
   const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
@@ -76,7 +78,13 @@ export default function MobileTripView({
               {trip.name || trip.destination}
             </h1>
             <p className="text-sm text-muted mt-0.5">
-              {dateRange} · {assigned.length} assigned · {unassigned.length} remaining
+              <button 
+                onClick={onEditDates}
+                className="hover:underline hover:text-foreground transition-colors"
+              >
+                {dateRange}
+              </button>
+              {' · '}{assigned.length} assigned · {unassigned.length} remaining
             </p>
           </div>
           <button

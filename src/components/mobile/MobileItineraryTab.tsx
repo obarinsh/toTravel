@@ -6,6 +6,7 @@ import { ChevronDown, Plus, X, Car, MapPin } from 'lucide-react';
 import { Trip, Attraction, Coordinates } from '@/types';
 import { getDayDate } from '@/components/DateRangePicker';
 import { getDistanceInfo } from '@/lib/distance';
+import PlaceModal from '@/components/PlaceModal';
 import Image from 'next/image';
 
 interface MobileItineraryTabProps {
@@ -22,6 +23,7 @@ interface DayCardProps {
   hotelLocation?: Coordinates;
   onAddMore: () => void;
   onRemoveAttraction: (attractionId: string) => void;
+  onAttractionClick: (attraction: Attraction) => void;
 }
 
 function DistanceBadge({ from, to }: { from: Coordinates; to: Coordinates }) {
@@ -44,6 +46,7 @@ function MobileDayCard({
   hotelLocation,
   onAddMore,
   onRemoveAttraction,
+  onAttractionClick,
 }: DayCardProps) {
   const [isExpanded, setIsExpanded] = useState(dayNumber === 1);
   const sortedAttractions = [...attractions].sort((a, b) => a.order - b.order);
@@ -116,6 +119,7 @@ function MobileDayCard({
                       <AttractionRow 
                         attraction={attraction} 
                         onRemove={() => onRemoveAttraction(attraction.id)}
+                        onClick={() => onAttractionClick(attraction)}
                       />
                       {index < sortedAttractions.length - 1 && (
                         <DistanceBadge
@@ -150,13 +154,18 @@ function MobileDayCard({
 
 function AttractionRow({ 
   attraction, 
-  onRemove 
+  onRemove,
+  onClick,
 }: { 
   attraction: Attraction; 
   onRemove: () => void;
+  onClick: () => void;
 }) {
   return (
-    <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-50">
+    <div 
+      className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 cursor-pointer active:bg-gray-100 transition-colors"
+      onClick={onClick}
+    >
       {/* Order number */}
       <div 
         className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium flex-shrink-0"
@@ -216,6 +225,7 @@ export default function MobileItineraryTab({
   onAddMore,
   onRemoveAttraction,
 }: MobileItineraryTabProps) {
+  const [selectedAttraction, setSelectedAttraction] = useState<Attraction | null>(null);
   const { attractions, start_date, hotel_location } = trip;
 
   // Group attractions by day
@@ -235,18 +245,30 @@ export default function MobileItineraryTab({
   }
 
   return (
-    <div className="p-4 space-y-3">
-      {Array.from({ length: numDays }, (_, i) => i + 1).map((dayNumber) => (
-        <MobileDayCard
-          key={dayNumber}
-          dayNumber={dayNumber}
-          date={start_date ? getDayDate(start_date, dayNumber) : ''}
-          attractions={attractionsByDay[dayNumber] || []}
-          hotelLocation={hotel_location}
-          onAddMore={() => onAddMore(dayNumber)}
-          onRemoveAttraction={onRemoveAttraction}
+    <>
+      <div className="p-4 space-y-3">
+        {Array.from({ length: numDays }, (_, i) => i + 1).map((dayNumber) => (
+          <MobileDayCard
+            key={dayNumber}
+            dayNumber={dayNumber}
+            date={start_date ? getDayDate(start_date, dayNumber) : ''}
+            attractions={attractionsByDay[dayNumber] || []}
+            hotelLocation={hotel_location}
+            onAddMore={() => onAddMore(dayNumber)}
+            onRemoveAttraction={onRemoveAttraction}
+            onAttractionClick={setSelectedAttraction}
+          />
+        ))}
+      </div>
+
+      {/* Place Details Modal */}
+      {selectedAttraction && (
+        <PlaceModal
+          attraction={selectedAttraction}
+          isOpen={!!selectedAttraction}
+          onClose={() => setSelectedAttraction(null)}
         />
-      ))}
-    </div>
+      )}
+    </>
   );
 }
