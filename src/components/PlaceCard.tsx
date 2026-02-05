@@ -92,6 +92,14 @@ export function PlaceCardContent({
             <GripVertical size={16} strokeWidth={1.5} />
           </div>
 
+          {/* Order number badge - matches map marker */}
+          <div 
+            className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-heading font-semibold flex-shrink-0 text-white"
+            style={{ backgroundColor: '#4A4F45' }}
+          >
+            {attraction.order}
+          </div>
+
           {/* Clickable content area - opens modal */}
           <button 
             type="button"
