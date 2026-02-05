@@ -2,10 +2,21 @@
 
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, MapPin, Plus, Check } from 'lucide-react';
-import { Attraction } from '@/types';
+import { X, MapPin, Plus, Check, Info, Landmark, Building2, Trees, Church, PartyPopper, UtensilsCrossed, ShoppingBag } from 'lucide-react';
+import { Attraction, AttractionCategory } from '@/types';
 import { getDayDate } from '@/components/DateRangePicker';
 import Image from 'next/image';
+import PlaceModal from '@/components/PlaceModal';
+
+const categoryConfig: Record<AttractionCategory, { label: string; icon: React.ElementType; color: string }> = {
+  landmark: { label: 'Landmarks', icon: Landmark, color: '#E4B84A' },
+  museum: { label: 'Museums', icon: Building2, color: '#8B5CF6' },
+  nature: { label: 'Nature', icon: Trees, color: '#22C55E' },
+  religious: { label: 'Religious', icon: Church, color: '#6366F1' },
+  entertainment: { label: 'Entertainment', icon: PartyPopper, color: '#EC4899' },
+  food: { label: 'Food', icon: UtensilsCrossed, color: '#F97316' },
+  shopping: { label: 'Shopping', icon: ShoppingBag, color: '#06B6D4' },
+};
 
 interface AddPlacesSheetProps {
   isOpen: boolean;
@@ -28,6 +39,23 @@ export default function AddPlacesSheet({
 }: AddPlacesSheetProps) {
   const [selectedAttractionId, setSelectedAttractionId] = useState<string | null>(null);
   const [selectedDay, setSelectedDay] = useState<number | null>(targetDay);
+  const [viewingAttraction, setViewingAttraction] = useState<Attraction | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<AttractionCategory | 'all'>('all');
+
+  // Get unique categories from attractions
+  const availableCategories = useMemo(() => {
+    const categories = new Set<AttractionCategory>();
+    unassignedAttractions.forEach(a => {
+      if (a.category) categories.add(a.category);
+    });
+    return Array.from(categories);
+  }, [unassignedAttractions]);
+
+  // Filter attractions by selected category
+  const filteredAttractions = useMemo(() => {
+    if (selectedCategory === 'all') return unassignedAttractions;
+    return unassignedAttractions.filter(a => a.category === selectedCategory);
+  }, [unassignedAttractions, selectedCategory]);
 
   // Update selectedDay when targetDay changes
   useMemo(() => {
@@ -116,27 +144,64 @@ export default function AddPlacesSheet({
               </div>
             )}
 
+            {/* Category Filter */}
+            {availableCategories.length > 1 && (
+              <div className="px-5 py-3 border-b border-border">
+                <div className="flex gap-2 overflow-x-auto pb-1 -mx-5 px-5 scrollbar-hide">
+                  <button
+                    onClick={() => setSelectedCategory('all')}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                      selectedCategory === 'all'
+                        ? 'bg-[#5C6B4A] text-white'
+                        : 'bg-gray-100 text-muted hover:bg-gray-200'
+                    }`}
+                  >
+                    All
+                  </button>
+                  {availableCategories.map((cat) => {
+                    const config = categoryConfig[cat];
+                    const Icon = config.icon;
+                    return (
+                      <button
+                        key={cat}
+                        onClick={() => setSelectedCategory(cat)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                          selectedCategory === cat
+                            ? 'text-white'
+                            : 'bg-gray-100 text-muted hover:bg-gray-200'
+                        }`}
+                        style={selectedCategory === cat ? { backgroundColor: config.color } : undefined}
+                      >
+                        <Icon size={12} />
+                        {config.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* Unassigned List */}
             <div className="flex-1 overflow-y-auto p-5">
-              {unassignedAttractions.length === 0 ? (
+              {filteredAttractions.length === 0 ? (
                 <div className="text-center py-12 text-muted">
                   <MapPin size={32} className="mx-auto mb-3 opacity-50" />
-                  <p>All places have been assigned!</p>
+                  <p>{unassignedAttractions.length === 0 ? 'All places have been assigned!' : 'No places in this category'}</p>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {unassignedAttractions.map((attraction) => (
-                    <button
+                  {filteredAttractions.map((attraction) => (
+                    <div
                       key={attraction.id}
-                      onClick={() => handleSelectAttraction(attraction.id)}
-                      className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${
+                      className={`flex items-center gap-3 p-3 rounded-xl transition-all ${
                         selectedAttractionId === attraction.id
                           ? 'bg-[#5C6B4A]/10 ring-2 ring-[#5C6B4A]'
-                          : 'bg-gray-50 hover:bg-gray-100'
+                          : 'bg-gray-50'
                       }`}
                     >
-                      {/* Checkbox */}
-                      <div 
+                      {/* Checkbox - tappable area for selection */}
+                      <button
+                        onClick={() => handleSelectAttraction(attraction.id)}
                         className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${
                           selectedAttractionId === attraction.id
                             ? 'bg-[#5C6B4A]'
@@ -146,39 +211,63 @@ export default function AddPlacesSheet({
                         {selectedAttractionId === attraction.id && (
                           <Check size={14} className="text-white" strokeWidth={3} />
                         )}
-                      </div>
+                      </button>
 
-                      {/* Image */}
-                      {attraction.photo_url ? (
-                        <div className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
-                          <Image
-                            src={attraction.photo_url}
-                            alt={attraction.name}
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                      ) : (
-                        <div 
-                          className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0"
-                          style={{ backgroundColor: 'rgba(92, 107, 74, 0.1)' }}
-                        >
-                          <MapPin size={16} style={{ color: '#5C6B4A' }} />
-                        </div>
-                      )}
-                      
-                      {/* Name */}
-                      <div className="flex-1 min-w-0 text-left">
-                        <p className="font-medium text-sm text-foreground truncate">
-                          {attraction.name}
-                        </p>
-                        {attraction.description && (
-                          <p className="text-xs text-muted truncate">
-                            {attraction.description}
-                          </p>
+                      {/* Clickable content area - opens details */}
+                      <button
+                        onClick={() => setViewingAttraction(attraction)}
+                        className="flex items-center gap-3 flex-1 min-w-0 text-left"
+                      >
+                        {/* Image */}
+                        {attraction.photo_url ? (
+                          <div className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
+                            <Image
+                              src={attraction.photo_url}
+                              alt={attraction.name}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div 
+                            className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0"
+                            style={{ backgroundColor: 'rgba(92, 107, 74, 0.1)' }}
+                          >
+                            <MapPin size={16} style={{ color: '#5C6B4A' }} />
+                          </div>
                         )}
-                      </div>
-                    </button>
+                        
+                        {/* Name and Category */}
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm text-foreground truncate">
+                            {attraction.name}
+                          </p>
+                          {attraction.category && categoryConfig[attraction.category] && (
+                            <span 
+                              className="inline-flex items-center gap-1 text-[10px] font-medium mt-0.5 px-1.5 py-0.5 rounded-full"
+                              style={{ 
+                                backgroundColor: `${categoryConfig[attraction.category].color}15`,
+                                color: categoryConfig[attraction.category].color
+                              }}
+                            >
+                              {(() => {
+                                const Icon = categoryConfig[attraction.category!].icon;
+                                return <Icon size={10} />;
+                              })()}
+                              {categoryConfig[attraction.category].label}
+                            </span>
+                          )}
+                          {attraction.description && (
+                            <p className="text-xs text-muted truncate">
+                              {attraction.description}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Info icon hint */}
+                        <Info size={16} className="text-muted flex-shrink-0" />
+                      </button>
+                    </div>
                   ))}
                 </div>
               )}
@@ -202,6 +291,15 @@ export default function AddPlacesSheet({
               </div>
             )}
           </motion.div>
+
+          {/* Place Details Modal */}
+          {viewingAttraction && (
+            <PlaceModal
+              attraction={viewingAttraction}
+              isOpen={!!viewingAttraction}
+              onClose={() => setViewingAttraction(null)}
+            />
+          )}
         </>
       )}
     </AnimatePresence>

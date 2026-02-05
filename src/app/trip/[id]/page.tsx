@@ -299,7 +299,7 @@ export default function TripPage() {
                 }
               }}
             />
-            <div className="relative" style={{ zIndex: 10000 }}>
+            <div className="relative w-full max-w-md" style={{ zIndex: 10000 }}>
               <DateRangePicker
                 startDate={trip.start_date}
                 endDate={trip.end_date}
@@ -566,7 +566,7 @@ export default function TripPage() {
               }
             }}
           />
-          <div className="relative" style={{ zIndex: 10000 }}>
+          <div className="relative w-full max-w-md" style={{ zIndex: 10000 }}>
             <DateRangePicker
               startDate={trip.start_date}
               endDate={trip.end_date}

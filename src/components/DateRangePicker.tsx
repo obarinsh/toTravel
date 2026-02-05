@@ -33,7 +33,7 @@ export default function DateRangePicker({
   const tripDays = start && end ? calculateDays(start, end) : 0;
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-lg border border-border max-w-md">
+    <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-lg border border-border w-full">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
@@ -65,7 +65,7 @@ export default function DateRangePicker({
 
       <form onSubmit={handleSubmit}>
         {/* Date inputs */}
-        <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4">
           <div>
             <label 
               className="block text-xs uppercase tracking-wider mb-2"
@@ -82,7 +82,7 @@ export default function DateRangePicker({
                   setEnd('');
                 }
               }}
-              className="w-full px-4 py-3 border rounded-xl bg-background focus:outline-none focus:ring-2 transition-all text-sm"
+              className="w-full px-3 sm:px-4 py-3 border rounded-xl bg-background focus:outline-none focus:ring-2 transition-all text-sm"
               style={{ 
                 borderColor: '#E8EBE3',
                 color: '#4A4F45',
@@ -102,7 +102,7 @@ export default function DateRangePicker({
               value={end}
               onChange={(e) => setEnd(e.target.value)}
               min={minEndDate}
-              className="w-full px-4 py-3 border rounded-xl bg-background focus:outline-none focus:ring-2 transition-all text-sm"
+              className="w-full px-3 sm:px-4 py-3 border rounded-xl bg-background focus:outline-none focus:ring-2 transition-all text-sm"
               style={{ 
                 borderColor: '#E8EBE3',
                 color: '#4A4F45',
@@ -127,15 +127,7 @@ export default function DateRangePicker({
         )}
 
         {/* Buttons */}
-        <div className="flex gap-3">
-          <button
-            type="submit"
-            disabled={!start || !end}
-            className="flex-1 px-6 py-3 rounded-full text-sm font-medium text-white transition-all hover:opacity-90 disabled:opacity-50"
-            style={{ backgroundColor: '#5C6B4A' }}
-          >
-            Save Dates
-          </button>
+        <div className="flex flex-col-reverse sm:flex-row gap-3">
           {/* Only show cancel button if dates exist or not required */}
           {(!required || (startDate && endDate)) && (
             <button
@@ -150,6 +142,14 @@ export default function DateRangePicker({
               Cancel
             </button>
           )}
+          <button
+            type="submit"
+            disabled={!start || !end}
+            className="flex-1 px-6 py-3 rounded-full text-sm font-medium text-white transition-all hover:opacity-90 disabled:opacity-50"
+            style={{ backgroundColor: '#5C6B4A' }}
+          >
+            Save Dates
+          </button>
         </div>
       </form>
     </div>

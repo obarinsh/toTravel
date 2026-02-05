@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'motion/react';
-import { MoreHorizontal, Calendar, MapPin, Map } from 'lucide-react';
+import { MoreHorizontal, Calendar, MapPin, Map, Utensils, Sparkles } from 'lucide-react';
 import { Trip, Attraction, Coordinates } from '@/types';
 import { calculateDays, formatDate } from '@/components/DateRangePicker';
 import MobileItineraryTab from './MobileItineraryTab';
@@ -10,8 +10,10 @@ import MobileNearbyTab from './MobileNearbyTab';
 import MobileMapTab from './MobileMapTab';
 import BottomNavBar from './BottomNavBar';
 import AddPlacesSheet from './AddPlacesSheet';
+import FoodTab from '@/components/FoodTab';
+import ActivitiesTab from '@/components/ActivitiesTab';
 
-type MobileTabType = 'itinerary' | 'nearby' | 'map';
+type MobileTabType = 'itinerary' | 'nearby' | 'map' | 'food' | 'activities';
 
 interface MobileTripViewProps {
   trip: Trip;
@@ -68,6 +70,24 @@ export default function MobileTripView({
     onAttractionsChange(newAttractions);
   };
 
+  const handleAddRestaurant = (restaurant: Omit<Attraction, 'id' | 'order'>) => {
+    const newAttraction: Attraction = {
+      ...restaurant,
+      id: `rest-${Date.now()}`,
+      order: attractions.length + 1,
+    };
+    onAttractionsChange([...attractions, newAttraction]);
+  };
+
+  const handleAddActivity = (activity: Omit<Attraction, 'id' | 'order'>) => {
+    const newAttraction: Attraction = {
+      ...activity,
+      id: `act-${Date.now()}`,
+      order: attractions.length + 1,
+    };
+    onAttractionsChange([...attractions, newAttraction]);
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-background">
       {/* Header */}
@@ -96,39 +116,61 @@ export default function MobileTripView({
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex mt-4 p-1 rounded-full" style={{ backgroundColor: '#E8EBE3' }}>
+        <div className="flex mt-4 p-1 rounded-full overflow-x-auto scrollbar-hide -mx-4 px-4" style={{ backgroundColor: '#E8EBE3' }}>
           <button
             onClick={() => setActiveTab('itinerary')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-full text-sm font-medium transition-all ${
+            className={`flex items-center justify-center gap-1 px-3 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
               activeTab === 'itinerary'
                 ? 'bg-white text-foreground shadow-sm'
                 : 'text-muted'
             }`}
           >
-            <Calendar size={14} strokeWidth={1.5} />
+            <Calendar size={12} strokeWidth={1.5} />
             Itinerary
           </button>
           <button
             onClick={() => setActiveTab('nearby')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-full text-sm font-medium transition-all ${
+            className={`flex items-center justify-center gap-1 px-3 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
               activeTab === 'nearby'
                 ? 'bg-white text-foreground shadow-sm'
                 : 'text-muted'
             }`}
           >
-            <MapPin size={14} strokeWidth={1.5} />
+            <MapPin size={12} strokeWidth={1.5} />
             Nearby
           </button>
           <button
             onClick={() => setActiveTab('map')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-full text-sm font-medium transition-all ${
+            className={`flex items-center justify-center gap-1 px-3 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
               activeTab === 'map'
                 ? 'bg-white text-foreground shadow-sm'
                 : 'text-muted'
             }`}
           >
-            <Map size={14} strokeWidth={1.5} />
+            <Map size={12} strokeWidth={1.5} />
             Map
+          </button>
+          <button
+            onClick={() => setActiveTab('food')}
+            className={`flex items-center justify-center gap-1 px-3 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
+              activeTab === 'food'
+                ? 'bg-white text-foreground shadow-sm'
+                : 'text-muted'
+            }`}
+          >
+            <Utensils size={12} strokeWidth={1.5} />
+            Food
+          </button>
+          <button
+            onClick={() => setActiveTab('activities')}
+            className={`flex items-center justify-center gap-1 px-3 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
+              activeTab === 'activities'
+                ? 'bg-white text-foreground shadow-sm'
+                : 'text-muted'
+            }`}
+          >
+            <Sparkles size={12} strokeWidth={1.5} />
+            Activities
           </button>
         </div>
       </div>
@@ -154,6 +196,25 @@ export default function MobileTripView({
             trip={trip}
             numDays={numDays}
           />
+        )}
+        {activeTab === 'food' && (
+          <div className="px-4 py-2">
+            <FoodTab
+              destination={trip.destination}
+              hotelLocation={trip.hotel_location}
+              onAddRestaurant={handleAddRestaurant}
+            />
+          </div>
+        )}
+        {activeTab === 'activities' && (
+          <div className="px-4 py-2">
+            <ActivitiesTab
+              destination={trip.destination}
+              hotelLocation={trip.hotel_location}
+              existingAttractions={attractions}
+              onAddAttraction={handleAddActivity}
+            />
+          </div>
         )}
       </div>
 

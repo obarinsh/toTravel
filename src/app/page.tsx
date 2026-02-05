@@ -2,12 +2,21 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'motion/react';
-import { ArrowRight, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { ArrowRight, Loader2, X } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import SearchBar from '@/components/SearchBar';
 import { GeocodingResult, Coordinates } from '@/types';
+
+interface Destination {
+  name: string;
+  country: string;
+  image: string;
+  featured: boolean;
+  description: string;
+  coordinates: Coordinates;
+}
 
 export default function Home() {
   const router = useRouter();
@@ -17,6 +26,7 @@ export default function Home() {
     fullName: string;
     coordinates: Coordinates;
   } | null>(null);
+  const [modalDestination, setModalDestination] = useState<Destination | null>(null);
 
   const handleDestinationSelect = (result: GeocodingResult) => {
     const parts = result.display_name.split(',').map(s => s.trim());
@@ -36,6 +46,17 @@ export default function Home() {
   
   const handleClearSelection = () => {
     setSelectedDestination(null);
+  };
+
+  const handleGoToDestination = (destination: Destination) => {
+    setSelectedDestination({
+      name: destination.name,
+      fullName: `${destination.name}, ${destination.country}`,
+      coordinates: destination.coordinates,
+    });
+    setModalDestination(null);
+    // Scroll to top to show the search bar with selected destination
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handlePlanTrip = async () => {
@@ -80,12 +101,47 @@ export default function Home() {
     }
   };
 
-  const trendingDestinations = [
-    { name: 'Santorini', country: 'Greece', image: 'https://images.unsplash.com/photo-1613395877344-13d4a8e0d49e?w=800&q=80', featured: true },
-    { name: 'Kyoto', country: 'Japan', image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=600&q=80', featured: false },
-    { name: 'Marrakech', country: 'Morocco', image: 'https://images.unsplash.com/photo-1539020140153-e479b8c22e70?w=600&q=80', featured: false },
-    { name: 'Lisbon', country: 'Portugal', image: 'https://images.unsplash.com/photo-1585208798174-6cedd86e019a?w=600&q=80', featured: false },
-    { name: 'Bali', country: 'Indonesia', image: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800&q=80', featured: true },
+  const trendingDestinations: Destination[] = [
+    { 
+      name: 'Santorini', 
+      country: 'Greece', 
+      image: 'https://images.unsplash.com/photo-1613395877344-13d4a8e0d49e?w=800&q=80', 
+      featured: true,
+      description: 'A stunning volcanic island in the Aegean Sea, famous for its whitewashed buildings with blue domes, breathtaking sunsets over the caldera, and beautiful black sand beaches. Explore ancient ruins, taste exceptional wines, and wander through charming villages perched on clifftops.',
+      coordinates: { lat: 36.3932, lng: 25.4615 }
+    },
+    { 
+      name: 'Kyoto', 
+      country: 'Japan', 
+      image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=600&q=80', 
+      featured: false,
+      description: 'Japan\'s ancient capital is a treasure trove of traditional temples, serene zen gardens, and historic geisha districts. Experience the magic of bamboo groves, participate in authentic tea ceremonies, and witness the beauty of cherry blossoms or autumn foliage.',
+      coordinates: { lat: 35.0116, lng: 135.7681 }
+    },
+    { 
+      name: 'Marrakech', 
+      country: 'Morocco', 
+      image: 'https://images.unsplash.com/photo-1539020140153-e479b8c22e70?w=600&q=80', 
+      featured: false,
+      description: 'A vibrant city where ancient traditions meet modern culture. Lose yourself in the maze-like souks, admire intricate tilework in historic palaces, and experience the sensory overload of Jemaa el-Fnaa square. Discover hidden riads, taste aromatic tagines, and explore stunning gardens.',
+      coordinates: { lat: 31.6295, lng: -7.9811 }
+    },
+    { 
+      name: 'Lisbon', 
+      country: 'Portugal', 
+      image: 'https://images.unsplash.com/photo-1585208798174-6cedd86e019a?w=600&q=80', 
+      featured: false,
+      description: 'Built on seven hills overlooking the Tagus River, Lisbon charms with its colorful azulejo tiles, vintage trams, and melancholic fado music. Explore historic neighborhoods like Alfama, indulge in pastéis de nata, and enjoy stunning viewpoints and a thriving food scene.',
+      coordinates: { lat: 38.7223, lng: -9.1393 }
+    },
+    { 
+      name: 'Bali', 
+      country: 'Indonesia', 
+      image: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800&q=80', 
+      featured: true,
+      description: 'The Island of the Gods offers a perfect blend of spiritual culture, lush landscapes, and pristine beaches. Discover ancient temples, emerald rice terraces, and world-class surf breaks. Experience traditional ceremonies, rejuvenating spa treatments, and unforgettable sunsets.',
+      coordinates: { lat: -8.4095, lng: 115.1889 }
+    },
   ];
 
   return (
@@ -297,6 +353,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
+            onClick={() => setModalDestination(trendingDestinations[0])}
           >
             <div className="aspect-square md:aspect-auto md:h-full relative">
               <Image
@@ -321,6 +378,7 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
+            onClick={() => setModalDestination(trendingDestinations[1])}
           >
             <div className="aspect-[4/5] relative">
               <Image
@@ -345,6 +403,7 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
+            onClick={() => setModalDestination(trendingDestinations[2])}
           >
             <div className="aspect-[4/5] relative">
               <Image
@@ -369,6 +428,7 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.3 }}
+            onClick={() => setModalDestination(trendingDestinations[3])}
           >
             <div className="aspect-[4/5] relative">
               <Image
@@ -393,6 +453,7 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.4 }}
+            onClick={() => setModalDestination(trendingDestinations[4])}
           >
             <div className="aspect-[4/5] relative">
               <Image
@@ -446,6 +507,82 @@ export default function Home() {
           </button>
         </motion.div>
       </section>
+
+      {/* Destination Modal */}
+      <AnimatePresence>
+        {modalDestination && (
+          <motion.div 
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            {/* Backdrop */}
+            <motion.div 
+              className="absolute inset-0"
+              style={{ backgroundColor: 'rgba(107, 114, 99, 0.85)' }}
+              onClick={() => setModalDestination(null)}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            />
+            
+            {/* Modal Content */}
+            <motion.div 
+              className="relative bg-white rounded-3xl overflow-hidden max-w-lg w-full shadow-2xl"
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ duration: 0.3 }}
+            >
+              {/* Close button */}
+              <button
+                onClick={() => setModalDestination(null)}
+                className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-black/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/30 transition-colors"
+              >
+                <X size={20} />
+              </button>
+
+              {/* Image */}
+              <div className="relative aspect-[4/3]">
+                <Image
+                  src={modalDestination.image}
+                  alt={modalDestination.name}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 512px"
+                  className="object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0" />
+                <div className="absolute bottom-0 left-0 p-6">
+                  <p className="text-xs tracking-[0.2em] uppercase text-white/70 mb-1">
+                    {modalDestination.country}
+                  </p>
+                  <h3 className="font-heading text-3xl text-white">
+                    {modalDestination.name}
+                  </h3>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="p-6">
+                <p className="text-gray-600 leading-relaxed mb-6">
+                  {modalDestination.description}
+                </p>
+
+                {/* Go there button */}
+                <button
+                  onClick={() => handleGoToDestination(modalDestination)}
+                  className="w-full py-4 rounded-full text-white font-medium transition-all hover:opacity-90 hover:scale-[1.02] flex items-center justify-center gap-2"
+                  style={{ backgroundColor: '#5C6B4A' }}
+                >
+                  <span>Plan a trip to {modalDestination.name}</span>
+                  <ArrowRight size={18} />
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

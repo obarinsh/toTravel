@@ -3,6 +3,8 @@ export interface Coordinates {
   lng: number;
 }
 
+export type AttractionCategory = 'landmark' | 'museum' | 'nature' | 'religious' | 'entertainment' | 'food' | 'shopping';
+
 export interface Attraction {
   id: string;
   name: string;
@@ -12,6 +14,7 @@ export interface Attraction {
   rating?: number;
   order: number;
   day?: number | null; // 1 = Day 1, 2 = Day 2, etc. null/undefined = unassigned
+  category?: AttractionCategory;
 }
 
 export interface Trip {

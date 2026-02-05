@@ -3,7 +3,7 @@
 import { motion } from 'motion/react';
 import { Map, MapPin, Plus } from 'lucide-react';
 
-type MobileTabType = 'itinerary' | 'nearby' | 'map';
+type MobileTabType = 'itinerary' | 'nearby' | 'map' | 'food' | 'activities';
 
 interface BottomNavBarProps {
   activeTab: MobileTabType;

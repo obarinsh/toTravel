@@ -30,6 +30,7 @@ export async function POST(request: NextRequest) {
       },
       photo_url: getAttractionImageUrl(attr.image_search_term, attr.name),
       order: i + 1,
+      category: attr.category as Attraction['category'],
     }));
 
     return NextResponse.json({ attractions });
