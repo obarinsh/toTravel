@@ -10,7 +10,11 @@ export const geminiModel = genAI.getGenerativeModel({
   model: 'gemini-2.5-flash',
 });
 
-export async function generateAttractions(destination: string, excludeNames?: string[]): Promise<{
+export async function generateAttractions(
+  destination: string, 
+  excludeNames?: string[],
+  category?: string
+): Promise<{
   attractions: Array<{
     name: string;
     description: string;
@@ -21,10 +25,30 @@ export async function generateAttractions(destination: string, excludeNames?: st
   }>;
 }> {
   const excludeSection = excludeNames && excludeNames.length > 0 
-    ? `\n\nIMPORTANT: Do NOT include any of these places that the user already has: ${excludeNames.join(', ')}\nGenerate 10 DIFFERENT attractions instead.`
+    ? `\n\nIMPORTANT: Do NOT include any of these places that the user already has: ${excludeNames.join(', ')}\nGenerate DIFFERENT attractions instead.`
     : '';
 
-  const prompt = `You are a travel expert with precise geographic knowledge. Generate the top 10 must-see attractions for tourists visiting ${destination}.
+  // Category mapping for more natural prompts
+  const categoryDescriptions: Record<string, string> = {
+    museum: 'museums, galleries, and cultural institutions',
+    park: 'parks, gardens, and green spaces',
+    nature: 'natural attractions, scenic viewpoints, and outdoor destinations',
+    religious: 'churches, temples, cathedrals, and places of worship',
+    architecture: 'historic buildings, palaces, castles, and architectural landmarks',
+    beach: 'beaches, coastal areas, and waterfront destinations',
+    food: 'food markets, local food experiences, and culinary attractions',
+    shopping: 'markets, shopping districts, and local shops',
+    historic: 'historic sites, monuments, and memorials',
+    landmark: 'famous landmarks and iconic attractions',
+  };
+
+  const categoryFilter = category && category.toLowerCase() !== 'all'
+    ? `\n\nFOCUS: Generate attractions specifically in the "${category}" category (${categoryDescriptions[category.toLowerCase()] || category}). All attractions should match this type.`
+    : '';
+
+  const numAttractions = category && category.toLowerCase() !== 'all' ? 5 : 10;
+
+  const prompt = `You are a travel expert with precise geographic knowledge. Generate ${numAttractions} must-see attractions for tourists visiting ${destination}.${categoryFilter}
 
 For each attraction, provide:
 - name: The official name of the attraction IN ENGLISH (use the common English name, not the local language)

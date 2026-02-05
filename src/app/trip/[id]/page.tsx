@@ -108,8 +108,8 @@ export default function TripPage() {
     }
   }, [trip]);
 
-  // Generate more attractions
-  const handleGenerateMore = useCallback(async () => {
+  // Generate more attractions (optionally filtered by category)
+  const handleGenerateMore = useCallback(async (category?: string) => {
     if (!trip) return;
     
     setIsGeneratingMore(true);
@@ -121,6 +121,7 @@ export default function TripPage() {
           destination: trip.destination,
           destinationCoordinates: trip.destination_coordinates,
           excludeNames: trip.attractions.map(a => a.name),
+          category, // Pass category filter if provided
         }),
       });
 
@@ -384,9 +385,9 @@ export default function TripPage() {
             </div>
           </div>
         )}
-        {/* Date Picker Modal for Mobile */}
+        {/* Date Picker Modal for Mobile - Full screen bottom sheet */}
         {isEditingDates && (
-          <div className="fixed inset-0 flex items-center justify-center p-4 z-[99999]">
+          <div className="fixed inset-0 flex items-end justify-center z-[99999]">
             <div 
               className="absolute inset-0 bg-black/50"
               onClick={() => {
@@ -395,13 +396,17 @@ export default function TripPage() {
                 }
               }}
             />
-            <div className="relative w-full max-w-md z-[100000]">
+            <div className="relative w-full bg-white rounded-t-3xl px-5 pt-4 pb-8 safe-area-pb z-[100000]">
+              <div className="flex justify-center mb-2">
+                <div className="w-10 h-1 rounded-full bg-gray-300" />
+              </div>
               <DateRangePicker
                 startDate={trip.start_date}
                 endDate={trip.end_date}
                 onSave={handleSaveDates}
                 onCancel={() => setIsEditingDates(false)}
                 required={!trip.start_date || !trip.end_date}
+                embedded
               />
             </div>
           </div>
@@ -624,6 +629,8 @@ export default function TripPage() {
           onHotelClear={handleClearHotel}
           hotelSearchMode={hotelSearchMode}
           onHotelSearchModeChange={setHotelSearchMode}
+          onGenerateMore={handleGenerateMore}
+          isGenerating={isGeneratingMore}
         />
       )}
 

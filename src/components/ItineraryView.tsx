@@ -45,6 +45,8 @@ interface ItineraryViewProps {
   onHotelClear?: () => void;
   hotelSearchMode?: 'none' | 'search' | 'click';
   onHotelSearchModeChange?: (mode: 'none' | 'search' | 'click') => void;
+  onGenerateMore?: (category?: string) => Promise<void>;
+  isGenerating?: boolean;
 }
 
 export default function ItineraryView({
@@ -59,6 +61,8 @@ export default function ItineraryView({
   onHotelClear,
   hotelSearchMode = 'none',
   onHotelSearchModeChange,
+  onGenerateMore,
+  isGenerating,
 }: ItineraryViewProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isMapExpanded, setIsMapExpanded] = useState(false);
@@ -209,6 +213,8 @@ export default function ItineraryView({
           selectedAttractionId={selectedAttractionId}
           onSelectAttraction={onSelectAttraction}
           onRemoveAttraction={onRemoveAttraction}
+          onGenerateMore={onGenerateMore}
+          isGenerating={isGenerating}
         />
 
         {/* Main Content - Itinerary */}

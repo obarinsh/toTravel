@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronLeft, ChevronRight, Package } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Package, Sparkles, Loader2 } from 'lucide-react';
 import { Attraction } from '@/types';
 import { SortablePlaceCard } from './PlaceCard';
 import {
@@ -16,6 +16,8 @@ interface SuggestionsPanelProps {
   selectedAttractionId?: string | null;
   onSelectAttraction: (id: string) => void;
   onRemoveAttraction?: (id: string) => void;
+  onGenerateMore?: (category?: string) => Promise<void>;
+  isGenerating?: boolean;
 }
 
 // Get place type from description
@@ -40,9 +42,22 @@ export default function SuggestionsPanel({
   selectedAttractionId,
   onSelectAttraction,
   onRemoveAttraction,
+  onGenerateMore,
+  isGenerating,
 }: SuggestionsPanelProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeFilter, setActiveFilter] = useState('All');
+  const [generatingCategory, setGeneratingCategory] = useState<string | null>(null);
+
+  const handleGenerateMore = async (category?: string) => {
+    if (!onGenerateMore || isGenerating) return;
+    setGeneratingCategory(category || 'all');
+    try {
+      await onGenerateMore(category);
+    } finally {
+      setGeneratingCategory(null);
+    }
+  };
 
   const { setNodeRef, isOver } = useDroppable({
     id: 'unassigned',
@@ -144,6 +159,28 @@ export default function SuggestionsPanel({
                       ? 'All places assigned!' 
                       : 'No matches for this filter'}
                   </div>
+                )}
+
+                {/* Generate More Button */}
+                {onGenerateMore && (
+                  <button
+                    onClick={() => handleGenerateMore(activeFilter === 'All' ? undefined : activeFilter.toLowerCase())}
+                    disabled={isGenerating}
+                    className="w-full mt-3 py-2.5 flex items-center justify-center gap-2 rounded-xl border-2 border-dashed text-xs font-medium transition-colors hover:bg-gray-50 disabled:opacity-50"
+                    style={{ borderColor: '#8B5CF6', color: '#8B5CF6' }}
+                  >
+                    {isGenerating && generatingCategory ? (
+                      <>
+                        <Loader2 size={14} className="animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles size={14} />
+                        {activeFilter === 'All' ? 'Generate more places' : `More ${activeFilter}`}
+                      </>
+                    )}
+                  </button>
                 )}
               </div>
             </SortableContext>

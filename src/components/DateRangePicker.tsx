@@ -9,6 +9,7 @@ interface DateRangePickerProps {
   onSave: (startDate: string, endDate: string) => void;
   onCancel: () => void;
   required?: boolean;
+  embedded?: boolean; // When true, removes outer wrapper styling (for use in bottom sheets)
 }
 
 export default function DateRangePicker({
@@ -17,6 +18,7 @@ export default function DateRangePicker({
   onSave,
   onCancel,
   required = false,
+  embedded = false,
 }: DateRangePickerProps) {
   const [start, setStart] = useState(startDate || '');
   const [end, setEnd] = useState(endDate || '');
@@ -33,7 +35,7 @@ export default function DateRangePicker({
   const tripDays = start && end ? calculateDays(start, end) : 0;
 
   return (
-    <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-lg border border-border w-full">
+    <div className={embedded ? 'w-full' : 'bg-white rounded-2xl p-4 sm:p-6 shadow-lg border border-border w-full'}>
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
