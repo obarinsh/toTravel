@@ -116,62 +116,54 @@ export default function MobileTripView({
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex mt-4 p-1 rounded-full overflow-x-auto scrollbar-hide -mx-4 px-4" style={{ backgroundColor: '#E8EBE3' }}>
-          <button
-            onClick={() => setActiveTab('itinerary')}
-            className={`flex items-center justify-center gap-1 px-3 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
-              activeTab === 'itinerary'
-                ? 'bg-white text-foreground shadow-sm'
-                : 'text-muted'
-            }`}
-          >
-            <Calendar size={12} strokeWidth={1.5} />
-            Itinerary
-          </button>
-          <button
-            onClick={() => setActiveTab('nearby')}
-            className={`flex items-center justify-center gap-1 px-3 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
-              activeTab === 'nearby'
-                ? 'bg-white text-foreground shadow-sm'
-                : 'text-muted'
-            }`}
-          >
-            <MapPin size={12} strokeWidth={1.5} />
-            Nearby
-          </button>
-          <button
-            onClick={() => setActiveTab('map')}
-            className={`flex items-center justify-center gap-1 px-3 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
-              activeTab === 'map'
-                ? 'bg-white text-foreground shadow-sm'
-                : 'text-muted'
-            }`}
-          >
-            <Map size={12} strokeWidth={1.5} />
-            Map
-          </button>
-          <button
-            onClick={() => setActiveTab('food')}
-            className={`flex items-center justify-center gap-1 px-3 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
-              activeTab === 'food'
-                ? 'bg-white text-foreground shadow-sm'
-                : 'text-muted'
-            }`}
-          >
-            <Utensils size={12} strokeWidth={1.5} />
-            Food
-          </button>
-          <button
-            onClick={() => setActiveTab('activities')}
-            className={`flex items-center justify-center gap-1 px-3 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
-              activeTab === 'activities'
-                ? 'bg-white text-foreground shadow-sm'
-                : 'text-muted'
-            }`}
-          >
-            <Sparkles size={12} strokeWidth={1.5} />
-            Activities
-          </button>
+        <div className="mt-4 -mx-4 px-4 overflow-x-auto scrollbar-hide pb-1">
+          <div className="inline-flex p-1 rounded-full overflow-hidden" style={{ backgroundColor: '#E8EBE3' }}>
+            <button
+              onClick={() => setActiveTab('itinerary')}
+              className={`flex items-center justify-center gap-1 px-3 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
+                activeTab === 'itinerary' ? 'bg-white text-foreground shadow-sm' : 'text-muted'
+              }`}
+            >
+              <Calendar size={12} strokeWidth={1.5} />
+              Itinerary
+            </button>
+            <button
+              onClick={() => setActiveTab('nearby')}
+              className={`flex items-center justify-center gap-1 px-3 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
+                activeTab === 'nearby' ? 'bg-white text-foreground shadow-sm' : 'text-muted'
+              }`}
+            >
+              <MapPin size={12} strokeWidth={1.5} />
+              Nearby
+            </button>
+            <button
+              onClick={() => setActiveTab('map')}
+              className={`flex items-center justify-center gap-1 px-3 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
+                activeTab === 'map' ? 'bg-white text-foreground shadow-sm' : 'text-muted'
+              }`}
+            >
+              <Map size={12} strokeWidth={1.5} />
+              Map
+            </button>
+            <button
+              onClick={() => setActiveTab('food')}
+              className={`flex items-center justify-center gap-1 px-3 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
+                activeTab === 'food' ? 'bg-white text-foreground shadow-sm' : 'text-muted'
+              }`}
+            >
+              <Utensils size={12} strokeWidth={1.5} />
+              Food
+            </button>
+            <button
+              onClick={() => setActiveTab('activities')}
+              className={`flex items-center justify-center gap-1 px-3 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
+                activeTab === 'activities' ? 'bg-white text-foreground shadow-sm' : 'text-muted'
+              }`}
+            >
+              <Sparkles size={12} strokeWidth={1.5} />
+              Activities
+            </button>
+          </div>
         </div>
       </div>
 
