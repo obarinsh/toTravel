@@ -55,22 +55,7 @@ html {
   --font-body: var(--font-inter);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #1A1A1A;
-    --foreground: #FAFAF8;
-    --primary: #E4B84A;
-    --primary-light: #EFC86A;
-    --primary-dark: #C9A03D;
-    --secondary: #6B7A59;
-    --secondary-light: #7A8968;
-    --card: #262626;
-    --border: #3D3D3D;
-    --border-light: #333333;
-    --muted: #9A9A9A;
-    --muted-dark: #ABABAB;
-  }
-}
+/* Dark mode disabled - app always uses light theme */
 
 body {
   background: var(--background);
