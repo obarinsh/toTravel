@@ -3,15 +3,17 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { motion } from 'motion/react';
-import { Map, Utensils, Sparkles, Loader2, Download, Share2, MoreVertical, Pencil, Check, X } from 'lucide-react';
+import { Map, Utensils, Sparkles, Loader2, Download, Share2, MoreVertical, Pencil, Check, X, MapPin } from 'lucide-react';
 import { Trip, Attraction, Coordinates } from '@/types';
 import ItineraryView from '@/components/ItineraryView';
 import DateRangePicker, { calculateDays, formatDate } from '@/components/DateRangePicker';
 import FoodTab from '@/components/FoodTab';
 import ActivitiesTab from '@/components/ActivitiesTab';
+import NearbyTab from '@/components/NearbyTab';
+import MobileTripView from '@/components/mobile/MobileTripView';
 import { exportTripToPDF } from '@/lib/pdfExport';
 
-type TabType = 'route' | 'food' | 'activities';
+type TabType = 'route' | 'nearby' | 'food' | 'activities';
 
 export default function TripPage() {
   const params = useParams();
@@ -238,87 +240,212 @@ export default function TripPage() {
   }
 
   return (
-    <motion.div 
-      className="space-y-6 pt-20 px-6 md:px-8 max-w-6xl mx-auto pb-8"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.6 }}
-    >
-      {/* Compact Header - Single row */}
-      <div className="flex items-center gap-4">
-        {/* Title and dates */}
-        <div className="flex flex-col">
-          {/* Trip name with edit functionality */}
-          <div className="flex items-center gap-2">
-            {isEditingName ? (
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={editedName}
-                  onChange={(e) => setEditedName(e.target.value)}
-                  placeholder={trip.destination}
-                  className="font-heading text-2xl font-semibold text-foreground tracking-tight bg-transparent border-b-2 border-secondary focus:outline-none min-w-[200px]"
-                  autoFocus
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleSaveName();
-                    if (e.key === 'Escape') setIsEditingName(false);
-                  }}
-                />
-                <button
-                  onClick={handleSaveName}
-                  className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
-                >
-                  <Check size={18} style={{ color: '#5C6B4A' }} />
-                </button>
-                <button
-                  onClick={() => setIsEditingName(false)}
-                  className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
-                >
-                  <X size={18} style={{ color: '#8B9082' }} />
-                </button>
-              </div>
-            ) : (
+    <>
+      {/* Mobile View - Hidden on md and up */}
+      <div className="md:hidden">
+        <MobileTripView
+          trip={trip}
+          onAttractionsChange={handleAttractionsChange}
+          onMenuOpen={() => setIsMenuOpen(true)}
+        />
+        {/* Mobile Menu Overlay */}
+        {isMenuOpen && (
+          <>
+            <div 
+              className="fixed inset-0 z-40"
+              onClick={() => setIsMenuOpen(false)}
+            />
+            <div className="fixed top-4 right-4 bg-white rounded-xl shadow-lg border border-border py-2 min-w-[180px] z-50">
+              <button
+                onClick={handleShareTrip}
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-gray-50 transition-colors"
+              >
+                <Share2 size={18} style={{ color: '#8B9082' }} strokeWidth={1.5} />
+                Share
+              </button>
+              <button
+                onClick={() => {
+                  exportTripToPDF({ trip, startDate: trip.start_date, endDate: trip.end_date });
+                  setIsMenuOpen(false);
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-gray-50 transition-colors"
+              >
+                <Download size={18} style={{ color: '#8B9082' }} strokeWidth={1.5} />
+                Export PDF
+              </button>
+              <button
+                onClick={() => {
+                  setIsEditingDates(true);
+                  setIsMenuOpen(false);
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-gray-50 transition-colors"
+              >
+                <Pencil size={18} style={{ color: '#8B9082' }} strokeWidth={1.5} />
+                Edit details
+              </button>
+            </div>
+          </>
+        )}
+        {/* Date Picker Modal for Mobile */}
+        {isEditingDates && (
+          <div className="fixed inset-0 flex items-center justify-center p-4" style={{ zIndex: 9999 }}>
+            <div 
+              className="absolute inset-0"
+              style={{ backgroundColor: 'rgba(107, 114, 99, 0.85)' }}
+              onClick={() => {
+                if (trip.start_date && trip.end_date) {
+                  setIsEditingDates(false);
+                }
+              }}
+            />
+            <div className="relative" style={{ zIndex: 10000 }}>
+              <DateRangePicker
+                startDate={trip.start_date}
+                endDate={trip.end_date}
+                onSave={handleSaveDates}
+                onCancel={() => setIsEditingDates(false)}
+                required={!trip.start_date || !trip.end_date}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Desktop View - Hidden on mobile */}
+      <motion.div 
+        className="hidden md:block space-y-6 pt-20 px-6 md:px-8 max-w-6xl mx-auto pb-8"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6 }}
+      >
+      {/* Header - Responsive layout */}
+      <div className="space-y-3">
+        {/* Top row: Title, dates, and menu */}
+        <div className="flex items-start justify-between gap-2">
+          {/* Title and dates */}
+          <div className="flex flex-col min-w-0 flex-1">
+            {/* Trip name with edit functionality */}
+            <div className="flex items-center gap-2">
+              {isEditingName ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={editedName}
+                    onChange={(e) => setEditedName(e.target.value)}
+                    placeholder={trip.destination}
+                    className="font-heading text-xl md:text-2xl font-semibold text-foreground tracking-tight bg-transparent border-b-2 border-secondary focus:outline-none min-w-0 flex-1"
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleSaveName();
+                      if (e.key === 'Escape') setIsEditingName(false);
+                    }}
+                  />
+                  <button
+                    onClick={handleSaveName}
+                    className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+                  >
+                    <Check size={18} style={{ color: '#5C6B4A' }} />
+                  </button>
+                  <button
+                    onClick={() => setIsEditingName(false)}
+                    className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+                  >
+                    <X size={18} style={{ color: '#8B9082' }} />
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <h1 className="font-heading text-xl md:text-2xl font-semibold text-foreground tracking-tight truncate">
+                    {trip.name || trip.destination}
+                  </h1>
+                  <button
+                    onClick={handleStartEditingName}
+                    className="p-1.5 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0"
+                  >
+                    <Pencil size={14} style={{ color: '#8B9082' }} />
+                  </button>
+                </>
+              )}
+            </div>
+            {/* Destination and dates row */}
+            <div className="flex items-center gap-2">
+              {trip.name && (
+                <span className="text-muted font-body text-sm">{trip.destination}</span>
+              )}
+              {trip.name && trip.start_date && trip.end_date && (
+                <span className="text-muted">·</span>
+              )}
+              <button 
+                onClick={() => setIsEditingDates(true)}
+                className="hover:opacity-70 transition-opacity"
+              >
+                {trip.start_date && trip.end_date ? (
+                  <span className="text-muted font-body text-sm">
+                    {formatDate(trip.start_date)} – {formatDate(trip.end_date)}
+                  </span>
+                ) : (
+                  <span className="text-sm font-body" style={{ color: '#5C6B4A' }}>+ dates</span>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Menu button - always visible */}
+          <div className="relative flex-shrink-0">
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+            >
+              <MoreVertical size={20} style={{ color: '#8B9082' }} />
+            </button>
+            
+            {isMenuOpen && (
               <>
-                <h1 className="font-heading text-2xl font-semibold text-foreground tracking-tight">
-                  {trip.name || trip.destination}
-                </h1>
-                <button
-                  onClick={handleStartEditingName}
-                  className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
-                >
-                  <Pencil size={14} style={{ color: '#8B9082' }} />
-                </button>
+                <div 
+                  className="fixed inset-0 z-40"
+                  onClick={() => setIsMenuOpen(false)}
+                />
+                <div className="absolute right-0 top-full mt-2 bg-white rounded-xl shadow-lg border border-border py-2 min-w-[180px] z-50">
+                  <button
+                    onClick={handleShareTrip}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-gray-50 transition-colors"
+                  >
+                    <Share2 size={18} style={{ color: '#8B9082' }} strokeWidth={1.5} />
+                    Share
+                  </button>
+                  <button
+                    onClick={() => {
+                      exportTripToPDF({ trip, startDate: trip.start_date, endDate: trip.end_date });
+                      setIsMenuOpen(false);
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-gray-50 transition-colors"
+                  >
+                    <Download size={18} style={{ color: '#8B9082' }} strokeWidth={1.5} />
+                    Export PDF
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsEditingDates(true);
+                      setIsMenuOpen(false);
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-gray-50 transition-colors"
+                  >
+                    <Pencil size={18} style={{ color: '#8B9082' }} strokeWidth={1.5} />
+                    Edit details
+                  </button>
+                </div>
               </>
             )}
           </div>
-          {/* Destination and dates row */}
-          <div className="flex items-center gap-2">
-            {trip.name && (
-              <span className="text-muted font-body text-sm">{trip.destination}</span>
-            )}
-            {trip.name && trip.start_date && trip.end_date && (
-              <span className="text-muted">·</span>
-            )}
-            <button 
-              onClick={() => setIsEditingDates(true)}
-              className="hover:opacity-70 transition-opacity"
-            >
-              {trip.start_date && trip.end_date ? (
-                <span className="text-muted font-body text-sm">
-                  {formatDate(trip.start_date)} – {formatDate(trip.end_date)}
-                </span>
-              ) : (
-                <span className="text-sm font-body" style={{ color: '#5C6B4A' }}>+ dates</span>
-              )}
-            </button>
-          </div>
         </div>
 
-        {/* Vertical divider */}
-        <div className="h-8 w-px" style={{ backgroundColor: '#E0E0DC' }} />
+        {/* Tab row - separate on mobile */}
+        <div className="flex items-center gap-4">
+          {/* Vertical divider - desktop only */}
+          <div className="hidden md:block h-8 w-px" style={{ backgroundColor: '#E0E0DC' }} />
 
-        {/* Tab Navigation */}
-        <div className="flex gap-1 p-1 rounded-full" style={{ backgroundColor: '#E8EBE3' }}>
+        {/* Tab Navigation - Desktop (3 tabs) */}
+        <div className="hidden md:flex gap-1 p-1 rounded-full" style={{ backgroundColor: '#E8EBE3' }}>
           <button
             onClick={() => setActiveTab('route')}
             className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
@@ -363,52 +490,65 @@ export default function TripPage() {
           </button>
         </div>
 
-        {/* Three-dot menu */}
-        <div className="relative ml-auto">
+        {/* Tab Navigation - Mobile (4 tabs with Nearby) */}
+        <div className="flex md:hidden gap-0.5 p-1 rounded-full overflow-x-auto" style={{ backgroundColor: '#E8EBE3' }}>
           <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+            onClick={() => setActiveTab('route')}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 flex-shrink-0 ${
+              activeTab === 'route'
+                ? 'text-white shadow-sm'
+                : 'text-muted hover:text-foreground'
+            }`}
+            style={activeTab === 'route' ? { backgroundColor: '#5C6B4A' } : undefined}
           >
-            <MoreVertical size={20} style={{ color: '#8B9082' }} />
+            <span className="flex items-center gap-1">
+              <Map size={12} strokeWidth={1.5} />
+              Route
+            </span>
           </button>
-          
-          {isMenuOpen && (
-            <>
-              <div 
-                className="fixed inset-0 z-40"
-                onClick={() => setIsMenuOpen(false)}
-              />
-              <div className="absolute right-0 top-full mt-2 bg-white rounded-xl shadow-lg border border-border py-2 min-w-[180px] z-50">
-                <button
-                  onClick={handleShareTrip}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-gray-50 transition-colors"
-                >
-                  <Share2 size={18} style={{ color: '#8B9082' }} strokeWidth={1.5} />
-                  Share
-                </button>
-                <button
-                  onClick={() => {
-                    exportTripToPDF({ trip, startDate: trip.start_date, endDate: trip.end_date });
-                    setIsMenuOpen(false);
-                  }}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-gray-50 transition-colors"
-                >
-                  <Download size={18} style={{ color: '#8B9082' }} strokeWidth={1.5} />
-                  Export PDF
-                </button>
-                <button
-                  onClick={() => {
-                    setIsEditingDates(true);
-                    setIsMenuOpen(false);
-                  }}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-gray-50 transition-colors"
-                >
-                  <Pencil size={18} style={{ color: '#8B9082' }} strokeWidth={1.5} />
-                  Edit details
-                </button>
-              </div>
-            </>
-          )}
+          <button
+            onClick={() => setActiveTab('nearby')}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 flex-shrink-0 ${
+              activeTab === 'nearby'
+                ? 'text-white shadow-sm'
+                : 'text-muted hover:text-foreground'
+            }`}
+            style={activeTab === 'nearby' ? { backgroundColor: '#5C6B4A' } : undefined}
+          >
+            <span className="flex items-center gap-1">
+              <MapPin size={12} strokeWidth={1.5} />
+              Nearby
+            </span>
+          </button>
+          <button
+            onClick={() => setActiveTab('food')}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 flex-shrink-0 ${
+              activeTab === 'food'
+                ? 'text-white shadow-sm'
+                : 'text-muted hover:text-foreground'
+            }`}
+            style={activeTab === 'food' ? { backgroundColor: '#5C6B4A' } : undefined}
+          >
+            <span className="flex items-center gap-1">
+              <Utensils size={12} strokeWidth={1.5} />
+              Food
+            </span>
+          </button>
+          <button
+            onClick={() => setActiveTab('activities')}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 flex-shrink-0 ${
+              activeTab === 'activities'
+                ? 'text-white shadow-sm'
+                : 'text-muted hover:text-foreground'
+            }`}
+            style={activeTab === 'activities' ? { backgroundColor: '#5C6B4A' } : undefined}
+          >
+            <span className="flex items-center gap-1">
+              <Sparkles size={12} strokeWidth={1.5} />
+              Activities
+            </span>
+          </button>
+        </div>
         </div>
       </div>
 
@@ -454,6 +594,15 @@ export default function TripPage() {
         />
       )}
 
+      {/* Nearby Tab Content - Mobile Only */}
+      {activeTab === 'nearby' && (
+        <NearbyTab
+          trip={trip}
+          onSelectAttraction={handleSelectAttraction}
+          selectedAttractionId={selectedAttractionId}
+        />
+      )}
+
       {/* Food Tab Content */}
       {activeTab === 'food' && (
         <FoodTab
@@ -487,6 +636,7 @@ export default function TripPage() {
         />
       )}
 
-    </motion.div>
+      </motion.div>
+    </>
   );
 }

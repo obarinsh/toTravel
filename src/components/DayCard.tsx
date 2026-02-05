@@ -7,15 +7,17 @@ import {
 } from '@dnd-kit/sortable';
 import { motion } from 'motion/react';
 import { Package } from 'lucide-react';
-import { Attraction } from '@/types';
+import { Attraction, Coordinates } from '@/types';
 import { SortableDayPlaceCard } from './PlaceCard';
 import { getDayDate } from './DateRangePicker';
+import DistanceBadge from './DistanceBadge';
 
 interface DayCardProps {
   dayNumber: number;
   startDate: string;
   attractions: Attraction[];
   onRemoveAttraction?: (id: string) => void;
+  hotelLocation?: Coordinates;
 }
 
 export default function DayCard({
@@ -23,6 +25,7 @@ export default function DayCard({
   startDate,
   attractions,
   onRemoveAttraction,
+  hotelLocation,
 }: DayCardProps) {
   const droppableId = `day-${dayNumber}`;
   
@@ -72,14 +75,31 @@ export default function DayCard({
         <div className="p-4 min-h-[100px]">
           {sortedAttractions.length > 0 ? (
             <div className="space-y-2">
-              {sortedAttractions.map((attraction, index) => (
-                <SortableDayPlaceCard
-                  key={attraction.id}
-                  attraction={attraction}
-                  index={index}
-                  onRemove={onRemoveAttraction ? () => onRemoveAttraction(attraction.id) : undefined}
-                />
-              ))}
+              {sortedAttractions.map((attraction, index) => {
+                // Get the previous location (hotel for first attraction, or previous attraction)
+                const prevLocation = index === 0 
+                  ? hotelLocation 
+                  : sortedAttractions[index - 1]?.coordinates;
+
+                return (
+                  <div key={attraction.id}>
+                    {/* Distance badge - mobile only, shown between attractions */}
+                    {prevLocation && (
+                      <div className="md:hidden">
+                        <DistanceBadge
+                          from={prevLocation}
+                          to={attraction.coordinates}
+                        />
+                      </div>
+                    )}
+                    <SortableDayPlaceCard
+                      attraction={attraction}
+                      index={index}
+                      onRemove={onRemoveAttraction ? () => onRemoveAttraction(attraction.id) : undefined}
+                    />
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <div className="border-2 border-dashed border-border rounded-xl h-20 flex items-center justify-center text-muted text-sm font-body font-light">

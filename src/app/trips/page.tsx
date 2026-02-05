@@ -106,20 +106,23 @@ export default function TripsPage() {
           <h1 className="font-heading text-4xl font-semibold text-foreground tracking-tight">My Trips</h1>
         </div>
         {trips.length > 0 && (
-          <Link
-            href="/"
-            className="group flex items-center gap-2 px-6 py-3 text-white rounded-[2rem] hover:scale-[1.02] transition-all duration-300"
-            style={{ backgroundColor: '#5C6B4A' }}
-          >
-            <Plus size={18} strokeWidth={2} />
-            <span className="label-premium">New Trip</span>
-          </Link>
+          <div className="self-start sm:self-auto">
+            <Link
+              href="/"
+              className="group inline-flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-6 sm:py-3 sm:gap-2 text-white rounded-full hover:scale-[1.02] transition-all duration-300"
+              style={{ backgroundColor: '#5C6B4A' }}
+            >
+              <Plus size={14} className="sm:hidden" strokeWidth={2} />
+              <Plus size={18} className="hidden sm:block" strokeWidth={2} />
+              <span className="label-premium">New Trip</span>
+            </Link>
+          </div>
         )}
       </div>
 
       {/* Filter Bar */}
       {trips.length > 0 && (
-        <div className="flex items-center gap-2 mb-8 overflow-x-auto pb-2">
+        <div className="flex flex-wrap items-center gap-2 mb-8">
           {filterOptions.map((option) => {
             const isActive = filter === option.value;
             const count = counts[option.value];
@@ -130,7 +133,7 @@ export default function TripsPage() {
                 onClick={() => setFilter(option.value)}
                 className={`
                   flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium
-                  transition-all duration-300 whitespace-nowrap
+                  transition-all duration-300
                   ${isActive 
                     ? 'text-white' 
                     : 'bg-white/80 text-foreground/70 hover:bg-white hover:text-foreground border border-border'

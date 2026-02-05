@@ -201,7 +201,8 @@ export default function ItineraryView({
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex min-h-[600px] h-[calc(100vh-280px)] -mx-8 rounded-[2rem] overflow-hidden border border-border/30">
+      {/* Desktop Layout - Side by side */}
+      <div className="hidden md:flex min-h-[600px] h-[calc(100vh-280px)] -mx-8 rounded-[2rem] overflow-hidden border border-border/30">
         {/* Left Sidebar - Suggestions */}
         <SuggestionsPanel
           attractions={unassigned}
@@ -385,6 +386,7 @@ export default function ItineraryView({
                     startDate={start_date!}
                     attractions={dayGroups[dayNum] || []}
                     onRemoveAttraction={onRemoveAttraction}
+                    hotelLocation={trip.hotel_location}
                   />
                 ))
               ) : (
@@ -402,6 +404,75 @@ export default function ItineraryView({
               )}
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Mobile Layout - Stacked */}
+      <div className="md:hidden flex flex-col gap-4">
+        {/* Suggestions Section - Collapsed on mobile */}
+        <div className="bg-card rounded-2xl border border-border/50 overflow-hidden">
+          <div className="px-4 py-3 border-b border-border/30">
+            <h2 className="font-heading font-semibold text-foreground text-sm">Suggestions</h2>
+            <p className="text-xs text-muted font-body font-light">{unassigned.length} places to assign</p>
+          </div>
+          {unassigned.length > 0 ? (
+            <div className="p-3 max-h-[200px] overflow-y-auto">
+              <div className="space-y-2">
+                {unassigned.slice(0, 5).map((attraction) => (
+                  <div
+                    key={attraction.id}
+                    className="flex items-center gap-2 p-2 rounded-lg bg-background hover:bg-moss-light/30 transition-colors cursor-pointer"
+                    onClick={() => onSelectAttraction(attraction.id)}
+                  >
+                    <div
+                      className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-heading font-semibold flex-shrink-0 text-white"
+                      style={{ backgroundColor: '#4A4F45' }}
+                    >
+                      {attraction.order}
+                    </div>
+                    <span className="text-sm text-foreground truncate">{attraction.name}</span>
+                  </div>
+                ))}
+                {unassigned.length > 5 && (
+                  <p className="text-xs text-muted text-center py-1">
+                    +{unassigned.length - 5} more places
+                  </p>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="p-4 text-center text-muted text-sm">
+              All places assigned!
+            </div>
+          )}
+        </div>
+
+        {/* Day Cards Section */}
+        <div className="space-y-4">
+          {numDays > 0 ? (
+            Array.from({ length: numDays }, (_, i) => i + 1).map((dayNum) => (
+              <DayCard
+                key={dayNum}
+                dayNumber={dayNum}
+                startDate={start_date!}
+                attractions={dayGroups[dayNum] || []}
+                onRemoveAttraction={onRemoveAttraction}
+                hotelLocation={trip.hotel_location}
+              />
+            ))
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-card rounded-2xl border border-border/50 p-6 text-center"
+            >
+              <Calendar size={32} className="mx-auto mb-3 text-muted/40" strokeWidth={1} />
+              <h3 className="font-heading font-semibold text-foreground mb-1 text-sm">Set Your Trip Dates</h3>
+              <p className="text-muted font-body font-light text-xs">
+                Add trip dates to organize your itinerary
+              </p>
+            </motion.div>
+          )}
         </div>
       </div>
 
