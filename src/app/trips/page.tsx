@@ -105,14 +105,16 @@ export default function TripsPage() {
           <p className="label-premium text-muted mb-2">Your Collection</p>
           <h1 className="font-heading text-4xl font-semibold text-foreground tracking-tight">My Trips</h1>
         </div>
-        <Link
-          href="/"
-          className="group flex items-center gap-2 px-6 py-3 text-white rounded-[2rem] hover:scale-[1.02] transition-all duration-300"
-          style={{ backgroundColor: '#5C6B4A' }}
-        >
-          <Plus size={18} strokeWidth={2} />
-          <span className="label-premium">New Trip</span>
-        </Link>
+        {trips.length > 0 && (
+          <Link
+            href="/"
+            className="group flex items-center gap-2 px-6 py-3 text-white rounded-[2rem] hover:scale-[1.02] transition-all duration-300"
+            style={{ backgroundColor: '#5C6B4A' }}
+          >
+            <Plus size={18} strokeWidth={2} />
+            <span className="label-premium">New Trip</span>
+          </Link>
+        )}
       </div>
 
       {/* Filter Bar */}
