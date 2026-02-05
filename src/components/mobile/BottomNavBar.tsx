@@ -33,7 +33,6 @@ export default function BottomNavBar({
         {/* FAB Button */}
         <motion.button
           onClick={onAddPress}
-          whileScale={0.95}
           whileTap={{ scale: 0.9 }}
           className="w-14 h-14 -mt-8 rounded-full flex items-center justify-center shadow-lg"
           style={{ backgroundColor: '#5C6B4A' }}
