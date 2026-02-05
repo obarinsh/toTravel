@@ -10,7 +10,7 @@ export const geminiModel = genAI.getGenerativeModel({
   model: 'gemini-2.5-flash',
 });
 
-export async function generateAttractions(destination: string): Promise<{
+export async function generateAttractions(destination: string, excludeNames?: string[]): Promise<{
   attractions: Array<{
     name: string;
     description: string;
@@ -20,6 +20,10 @@ export async function generateAttractions(destination: string): Promise<{
     image_search_term: string;
   }>;
 }> {
+  const excludeSection = excludeNames && excludeNames.length > 0 
+    ? `\n\nIMPORTANT: Do NOT include any of these places that the user already has: ${excludeNames.join(', ')}\nGenerate 10 DIFFERENT attractions instead.`
+    : '';
+
   const prompt = `You are a travel expert with precise geographic knowledge. Generate the top 10 must-see attractions for tourists visiting ${destination}.
 
 For each attraction, provide:
@@ -30,7 +34,7 @@ For each attraction, provide:
 - longitude: The precise longitude coordinate of the attraction (decimal format, e.g., 34.7818)
 - image_search_term: A specific search term to find an image of this place (e.g., "Eiffel Tower Paris", "Louvre Museum exterior")
 
-IMPORTANT: Provide accurate GPS coordinates for each attraction. These will be used to place markers on a map.
+IMPORTANT: Provide accurate GPS coordinates for each attraction. These will be used to place markers on a map.${excludeSection}
 
 Return ONLY a JSON object in this exact format:
 {

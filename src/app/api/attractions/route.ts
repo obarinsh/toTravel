@@ -5,7 +5,7 @@ import { Attraction } from '@/types';
 
 export async function POST(request: NextRequest) {
   try {
-    const { destination, destinationCoordinates } = await request.json();
+    const { destination, destinationCoordinates, excludeNames } = await request.json();
 
     if (!destination) {
       return NextResponse.json(
@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate attractions using Gemini (now includes coordinates)
-    const { attractions: rawAttractions } = await generateAttractions(destination);
+    const { attractions: rawAttractions } = await generateAttractions(destination, excludeNames);
     
     console.log('Gemini returned attractions:', JSON.stringify(rawAttractions, null, 2));
 

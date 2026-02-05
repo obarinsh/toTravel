@@ -20,6 +20,8 @@ interface MobileTripViewProps {
   onAttractionsChange: (attractions: Attraction[]) => void;
   onMenuOpen: () => void;
   onEditDates: () => void;
+  onGenerateMore?: () => Promise<void>;
+  isGenerating?: boolean;
 }
 
 export default function MobileTripView({
@@ -27,6 +29,8 @@ export default function MobileTripView({
   onAttractionsChange,
   onMenuOpen,
   onEditDates,
+  onGenerateMore,
+  isGenerating,
 }: MobileTripViewProps) {
   const [activeTab, setActiveTab] = useState<MobileTabType>('itinerary');
   const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
@@ -226,6 +230,8 @@ export default function MobileTripView({
         targetDay={addToDay}
         onAssign={handleAssignToDay}
         startDate={start_date}
+        onGenerateMore={onGenerateMore}
+        isGenerating={isGenerating}
       />
     </div>
   );

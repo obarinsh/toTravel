@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, MapPin, Plus, Check, Info, Landmark, Building2, Trees, Church, PartyPopper, UtensilsCrossed, ShoppingBag } from 'lucide-react';
+import { X, MapPin, Plus, Check, Info, Landmark, Building2, Trees, Church, PartyPopper, UtensilsCrossed, ShoppingBag, Sparkles, Loader2 } from 'lucide-react';
 import { Attraction, AttractionCategory } from '@/types';
 import { getDayDate } from '@/components/DateRangePicker';
 import Image from 'next/image';
@@ -26,6 +26,8 @@ interface AddPlacesSheetProps {
   targetDay: number | null;
   onAssign: (attractionId: string, dayNumber: number) => void;
   startDate?: string | null;
+  onGenerateMore?: () => Promise<void>;
+  isGenerating?: boolean;
 }
 
 export default function AddPlacesSheet({
@@ -36,6 +38,8 @@ export default function AddPlacesSheet({
   targetDay,
   onAssign,
   startDate,
+  onGenerateMore,
+  isGenerating,
 }: AddPlacesSheetProps) {
   const [selectedAttractionId, setSelectedAttractionId] = useState<string | null>(null);
   const [selectedDay, setSelectedDay] = useState<number | null>(targetDay);
@@ -294,6 +298,28 @@ export default function AddPlacesSheet({
                     </div>
                   ))}
                 </div>
+              )}
+
+              {/* Generate More Button */}
+              {onGenerateMore && (
+                <button
+                  onClick={onGenerateMore}
+                  disabled={isGenerating}
+                  className="w-full mt-4 py-3 flex items-center justify-center gap-2 rounded-xl border-2 border-dashed text-sm font-medium transition-colors hover:bg-gray-50 disabled:opacity-50"
+                  style={{ borderColor: '#8B5CF6', color: '#8B5CF6' }}
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      Generating more places...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles size={16} />
+                      Generate more suggestions
+                    </>
+                  )}
+                </button>
               )}
             </div>
 

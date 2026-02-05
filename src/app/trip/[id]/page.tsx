@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { motion } from 'motion/react';
-import { Map, Utensils, Sparkles, Loader2, Download, Share2, MoreVertical, Pencil, Check, X, MapPin } from 'lucide-react';
+import { Map, Utensils, Sparkles, Loader2, Download, Share2, MoreVertical, Pencil, Check, X, MapPin, Building2 } from 'lucide-react';
 import { Trip, Attraction, Coordinates } from '@/types';
 import ItineraryView from '@/components/ItineraryView';
 import DateRangePicker, { calculateDays, formatDate } from '@/components/DateRangePicker';
@@ -11,6 +11,7 @@ import FoodTab from '@/components/FoodTab';
 import ActivitiesTab from '@/components/ActivitiesTab';
 import NearbyTab from '@/components/NearbyTab';
 import MobileTripView from '@/components/mobile/MobileTripView';
+import HotelSearch from '@/components/HotelSearch';
 import { exportTripToPDF } from '@/lib/pdfExport';
 
 type TabType = 'route' | 'nearby' | 'food' | 'activities';
@@ -29,6 +30,8 @@ export default function TripPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState('');
+  const [isMobileHotelSearchOpen, setIsMobileHotelSearchOpen] = useState(false);
+  const [isGeneratingMore, setIsGeneratingMore] = useState(false);
 
   // Share trip functionality
   const handleShareTrip = useCallback(async () => {
@@ -104,6 +107,46 @@ export default function TripPage() {
       setIsSaving(false);
     }
   }, [trip]);
+
+  // Generate more attractions
+  const handleGenerateMore = useCallback(async () => {
+    if (!trip) return;
+    
+    setIsGeneratingMore(true);
+    try {
+      const response = await fetch('/api/attractions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          destination: trip.destination,
+          destinationCoordinates: trip.destination_coordinates,
+          excludeNames: trip.attractions.map(a => a.name),
+        }),
+      });
+
+      const { attractions: newAttractions } = await response.json();
+      
+      if (newAttractions && newAttractions.length > 0) {
+        // Add new attractions with proper order numbers
+        const startOrder = trip.attractions.length + 1;
+        const attractionsToAdd = newAttractions.map((a: Attraction, i: number) => ({
+          ...a,
+          id: `attr-${Date.now()}-${i}`,
+          order: startOrder + i,
+          day: null, // Unassigned
+        }));
+        
+        const updatedAttractions = [...trip.attractions, ...attractionsToAdd];
+        setTrip({ ...trip, attractions: updatedAttractions });
+        saveTrip({ attractions: updatedAttractions });
+      }
+    } catch (error) {
+      console.error('Error generating more attractions:', error);
+      alert('Failed to generate more places. Please try again.');
+    } finally {
+      setIsGeneratingMore(false);
+    }
+  }, [trip, saveTrip]);
 
   const handleAttractionsChange = (newAttractions: Attraction[]) => {
     if (!trip) return;
@@ -248,6 +291,8 @@ export default function TripPage() {
           onAttractionsChange={handleAttractionsChange}
           onMenuOpen={() => setIsMenuOpen(true)}
           onEditDates={() => setIsEditingDates(true)}
+          onGenerateMore={handleGenerateMore}
+          isGenerating={isGeneratingMore}
         />
         {/* Mobile Menu Overlay */}
         {isMenuOpen && (
@@ -282,24 +327,75 @@ export default function TripPage() {
                 className="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-gray-50 transition-colors"
               >
                 <Pencil size={18} style={{ color: '#8B9082' }} strokeWidth={1.5} />
-                Edit details
+                Edit dates
               </button>
+              <button
+                onClick={() => {
+                  setIsMobileHotelSearchOpen(true);
+                  setIsMenuOpen(false);
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-gray-50 transition-colors"
+              >
+                <Building2 size={18} style={{ color: '#8B9082' }} strokeWidth={1.5} />
+                {trip.hotel_location ? 'Change hotel' : 'Set hotel'}
+              </button>
+              {trip.hotel_location && (
+                <button
+                  onClick={() => {
+                    handleClearHotel();
+                    setIsMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-500 hover:bg-gray-50 transition-colors"
+                >
+                  <X size={18} strokeWidth={1.5} />
+                  Remove hotel
+                </button>
+              )}
             </div>
           </>
         )}
+        {/* Mobile Hotel Search Modal */}
+        {isMobileHotelSearchOpen && (
+          <div className="fixed inset-0 flex items-end justify-center z-[99999]">
+            <div 
+              className="absolute inset-0 bg-black/50"
+              onClick={() => setIsMobileHotelSearchOpen(false)}
+            />
+            <div className="relative w-full bg-white rounded-t-3xl p-5 pb-8 safe-area-pb z-[100000]">
+              <div className="flex justify-center mb-4">
+                <div className="w-10 h-1 rounded-full bg-gray-300" />
+              </div>
+              <h3 className="font-heading text-lg font-semibold text-foreground mb-4">
+                {trip.hotel_location ? 'Change your hotel' : 'Where are you staying?'}
+              </h3>
+              {trip.hotel_name && (
+                <p className="text-sm text-muted mb-4">
+                  Current: {trip.hotel_name}
+                </p>
+              )}
+              <HotelSearch
+                destination={trip.destination}
+                onSelect={(result) => {
+                  handleHotelSelect(result);
+                  setIsMobileHotelSearchOpen(false);
+                }}
+                onCancel={() => setIsMobileHotelSearchOpen(false)}
+              />
+            </div>
+          </div>
+        )}
         {/* Date Picker Modal for Mobile */}
         {isEditingDates && (
-          <div className="fixed inset-0 flex items-center justify-center p-4" style={{ zIndex: 9999 }}>
+          <div className="fixed inset-0 flex items-center justify-center p-4 z-[99999]">
             <div 
-              className="absolute inset-0"
-              style={{ backgroundColor: 'rgba(107, 114, 99, 0.85)' }}
+              className="absolute inset-0 bg-black/50"
               onClick={() => {
                 if (trip.start_date && trip.end_date) {
                   setIsEditingDates(false);
                 }
               }}
             />
-            <div className="relative w-full max-w-md" style={{ zIndex: 10000 }}>
+            <div className="relative w-full max-w-md z-[100000]">
               <DateRangePicker
                 startDate={trip.start_date}
                 endDate={trip.end_date}
@@ -320,11 +416,10 @@ export default function TripPage() {
         transition={{ duration: 0.6 }}
       >
       {/* Header - Responsive layout */}
-      <div className="space-y-3">
-        {/* Top row: Title, dates, and menu */}
-        <div className="flex items-start justify-between gap-2">
-          {/* Title and dates */}
-          <div className="flex flex-col min-w-0 flex-1">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        {/* Title and dates */}
+        <div className="flex items-center gap-4 min-w-0 flex-1">
+          <div className="flex flex-col min-w-0">
             {/* Trip name with edit functionality */}
             <div className="flex items-center gap-2">
               {isEditingName ? (
@@ -391,62 +486,11 @@ export default function TripPage() {
             </div>
           </div>
 
-          {/* Menu button - always visible */}
-          <div className="relative flex-shrink-0">
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-            >
-              <MoreVertical size={20} style={{ color: '#8B9082' }} />
-            </button>
-            
-            {isMenuOpen && (
-              <>
-                <div 
-                  className="fixed inset-0 z-40"
-                  onClick={() => setIsMenuOpen(false)}
-                />
-                <div className="absolute right-0 top-full mt-2 bg-white rounded-xl shadow-lg border border-border py-2 min-w-[180px] z-50">
-                  <button
-                    onClick={handleShareTrip}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-gray-50 transition-colors"
-                  >
-                    <Share2 size={18} style={{ color: '#8B9082' }} strokeWidth={1.5} />
-                    Share
-                  </button>
-                  <button
-                    onClick={() => {
-                      exportTripToPDF({ trip, startDate: trip.start_date, endDate: trip.end_date });
-                      setIsMenuOpen(false);
-                    }}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-gray-50 transition-colors"
-                  >
-                    <Download size={18} style={{ color: '#8B9082' }} strokeWidth={1.5} />
-                    Export PDF
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsEditingDates(true);
-                      setIsMenuOpen(false);
-                    }}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-gray-50 transition-colors"
-                  >
-                    <Pencil size={18} style={{ color: '#8B9082' }} strokeWidth={1.5} />
-                    Edit details
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
+          {/* Vertical divider */}
+          <div className="h-8 w-px flex-shrink-0" style={{ backgroundColor: '#E0E0DC' }} />
 
-        {/* Tab row - separate on mobile */}
-        <div className="flex items-center gap-4">
-          {/* Vertical divider - desktop only */}
-          <div className="hidden md:block h-8 w-px" style={{ backgroundColor: '#E0E0DC' }} />
-
-        {/* Tab Navigation - Desktop (3 tabs) */}
-        <div className="hidden md:flex gap-1 p-1 rounded-full" style={{ backgroundColor: '#E8EBE3' }}>
+          {/* Tab Navigation - Desktop (3 tabs) */}
+          <div className="flex gap-1 p-1 rounded-full flex-shrink-0" style={{ backgroundColor: '#E8EBE3' }}>
           <button
             onClick={() => setActiveTab('route')}
             className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
@@ -489,67 +533,55 @@ export default function TripPage() {
               Activities
             </span>
           </button>
+          </div>
         </div>
 
-        {/* Tab Navigation - Mobile (4 tabs with Nearby) */}
-        <div className="flex md:hidden gap-0.5 p-1 rounded-full overflow-x-auto" style={{ backgroundColor: '#E8EBE3' }}>
+        {/* Menu button */}
+        <div className="relative flex-shrink-0">
           <button
-            onClick={() => setActiveTab('route')}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 flex-shrink-0 ${
-              activeTab === 'route'
-                ? 'text-white shadow-sm'
-                : 'text-muted hover:text-foreground'
-            }`}
-            style={activeTab === 'route' ? { backgroundColor: '#5C6B4A' } : undefined}
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="p-2 rounded-full hover:bg-gray-100 transition-colors"
           >
-            <span className="flex items-center gap-1">
-              <Map size={12} strokeWidth={1.5} />
-              Route
-            </span>
+            <MoreVertical size={20} style={{ color: '#8B9082' }} />
           </button>
-          <button
-            onClick={() => setActiveTab('nearby')}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 flex-shrink-0 ${
-              activeTab === 'nearby'
-                ? 'text-white shadow-sm'
-                : 'text-muted hover:text-foreground'
-            }`}
-            style={activeTab === 'nearby' ? { backgroundColor: '#5C6B4A' } : undefined}
-          >
-            <span className="flex items-center gap-1">
-              <MapPin size={12} strokeWidth={1.5} />
-              Nearby
-            </span>
-          </button>
-          <button
-            onClick={() => setActiveTab('food')}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 flex-shrink-0 ${
-              activeTab === 'food'
-                ? 'text-white shadow-sm'
-                : 'text-muted hover:text-foreground'
-            }`}
-            style={activeTab === 'food' ? { backgroundColor: '#5C6B4A' } : undefined}
-          >
-            <span className="flex items-center gap-1">
-              <Utensils size={12} strokeWidth={1.5} />
-              Food
-            </span>
-          </button>
-          <button
-            onClick={() => setActiveTab('activities')}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 flex-shrink-0 ${
-              activeTab === 'activities'
-                ? 'text-white shadow-sm'
-                : 'text-muted hover:text-foreground'
-            }`}
-            style={activeTab === 'activities' ? { backgroundColor: '#5C6B4A' } : undefined}
-          >
-            <span className="flex items-center gap-1">
-              <Sparkles size={12} strokeWidth={1.5} />
-              Activities
-            </span>
-          </button>
-        </div>
+          
+          {isMenuOpen && (
+            <>
+              <div 
+                className="fixed inset-0 z-40"
+                onClick={() => setIsMenuOpen(false)}
+              />
+              <div className="absolute right-0 top-full mt-2 bg-white rounded-xl shadow-lg border border-border py-2 min-w-[180px] z-50">
+                <button
+                  onClick={handleShareTrip}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-gray-50 transition-colors"
+                >
+                  <Share2 size={18} style={{ color: '#8B9082' }} strokeWidth={1.5} />
+                  Share
+                </button>
+                <button
+                  onClick={() => {
+                    exportTripToPDF({ trip, startDate: trip.start_date, endDate: trip.end_date });
+                    setIsMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-gray-50 transition-colors"
+                >
+                  <Download size={18} style={{ color: '#8B9082' }} strokeWidth={1.5} />
+                  Export PDF
+                </button>
+                <button
+                  onClick={() => {
+                    setIsEditingDates(true);
+                    setIsMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-gray-50 transition-colors"
+                >
+                  <Pencil size={18} style={{ color: '#8B9082' }} strokeWidth={1.5} />
+                  Edit details
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
