@@ -94,26 +94,26 @@ export default function TripsPage() {
 
   return (
     <motion.div
-      className="pt-24 px-6 md:px-8 max-w-6xl mx-auto pb-8"
+      className="pt-24 px-4 md:px-8 max-w-6xl mx-auto pb-8"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
     >
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
         <div>
           <p className="label-premium text-muted mb-2">Your Collection</p>
           <h1 className="font-heading text-4xl font-semibold text-foreground tracking-tight">My Trips</h1>
         </div>
         {trips.length > 0 && (
-          <div className="self-start sm:self-auto">
+          <div className="self-start md:self-auto">
             <Link
               href="/"
-              className="group inline-flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-6 sm:py-3 sm:gap-2 text-white rounded-full hover:scale-[1.02] transition-all duration-300"
+              className="group inline-flex items-center justify-center gap-1.5 px-3 py-1.5 md:px-6 md:py-3 md:gap-2 text-white rounded-full hover:scale-[1.02] transition-all duration-300"
               style={{ backgroundColor: '#5C6B4A' }}
             >
-              <Plus size={14} className="sm:hidden" strokeWidth={2} />
-              <Plus size={18} className="hidden sm:block" strokeWidth={2} />
+              <Plus size={14} className="md:hidden" strokeWidth={2} />
+              <Plus size={18} className="hidden md:block" strokeWidth={2} />
               <span className="label-premium">New Trip</span>
             </Link>
           </div>
