@@ -311,7 +311,7 @@ export default function MobileNearbyTab({
               isExpanded={expandedClusterId === cluster.id}
               onToggle={() => handleToggleCluster(cluster.id)}
               onSelectAttraction={handleSelectAttraction}
-              selectedAttractionId={selectedAttraction?.id}
+              selectedAttractionId={undefined}
             />
           ))
         )}
