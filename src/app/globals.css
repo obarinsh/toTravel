@@ -116,6 +116,15 @@ input[style*="rgba(255, 255, 255"]::placeholder {
   height: 100%;
   width: 100%;
   border-radius: 1rem;
+  z-index: 0 !important;
+}
+
+/* Ensure Leaflet controls and panes don't exceed modal z-index */
+.leaflet-pane,
+.leaflet-control,
+.leaflet-top,
+.leaflet-bottom {
+  z-index: auto !important;
 }
 
 /* Custom marker styles */
