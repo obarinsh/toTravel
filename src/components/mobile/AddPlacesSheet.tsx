@@ -42,20 +42,44 @@ export default function AddPlacesSheet({
   const [viewingAttraction, setViewingAttraction] = useState<Attraction | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<AttractionCategory | 'all'>('all');
 
+  // Infer category from attraction name/description if not set
+  const inferCategory = (attraction: Attraction): AttractionCategory => {
+    if (attraction.category) return attraction.category;
+    
+    const text = `${attraction.name} ${attraction.description || ''}`.toLowerCase();
+    
+    if (text.includes('museum') || text.includes('gallery') || text.includes('art ')) return 'museum';
+    if (text.includes('park') || text.includes('garden') || text.includes('beach') || text.includes('nature') || text.includes('mountain') || text.includes('lake') || text.includes('waterfall')) return 'nature';
+    if (text.includes('church') || text.includes('cathedral') || text.includes('temple') || text.includes('mosque') || text.includes('monastery') || text.includes('religious')) return 'religious';
+    if (text.includes('restaurant') || text.includes('food') || text.includes('market') || text.includes('cafe') || text.includes('cuisine')) return 'food';
+    if (text.includes('shop') || text.includes('mall') || text.includes('store') || text.includes('boutique')) return 'shopping';
+    if (text.includes('theater') || text.includes('cinema') || text.includes('show') || text.includes('entertainment') || text.includes('zoo') || text.includes('aquarium')) return 'entertainment';
+    
+    return 'landmark'; // Default
+  };
+
+  // Attractions with inferred categories
+  const attractionsWithCategories = useMemo(() => {
+    return unassignedAttractions.map(a => ({
+      ...a,
+      category: inferCategory(a),
+    }));
+  }, [unassignedAttractions]);
+
   // Get unique categories from attractions
   const availableCategories = useMemo(() => {
     const categories = new Set<AttractionCategory>();
-    unassignedAttractions.forEach(a => {
-      if (a.category) categories.add(a.category);
+    attractionsWithCategories.forEach(a => {
+      categories.add(a.category!);
     });
-    return Array.from(categories);
-  }, [unassignedAttractions]);
+    return Array.from(categories).sort();
+  }, [attractionsWithCategories]);
 
   // Filter attractions by selected category
   const filteredAttractions = useMemo(() => {
-    if (selectedCategory === 'all') return unassignedAttractions;
-    return unassignedAttractions.filter(a => a.category === selectedCategory);
-  }, [unassignedAttractions, selectedCategory]);
+    if (selectedCategory === 'all') return attractionsWithCategories;
+    return attractionsWithCategories.filter(a => a.category === selectedCategory);
+  }, [attractionsWithCategories, selectedCategory]);
 
   // Update selectedDay when targetDay changes
   useMemo(() => {
@@ -145,7 +169,7 @@ export default function AddPlacesSheet({
             )}
 
             {/* Category Filter */}
-            {availableCategories.length > 1 && (
+            {unassignedAttractions.length > 0 && (
               <div className="px-5 py-3 border-b border-border">
                 <div className="flex gap-2 overflow-x-auto pb-1 -mx-5 px-5 scrollbar-hide">
                   <button
