@@ -84,9 +84,9 @@ export default function DateRangePicker({
                   setEnd('');
                 }
               }}
-              className="w-full px-3 sm:px-4 py-3 border rounded-xl bg-background focus:outline-none focus:ring-2 transition-all text-sm"
+              className="w-full px-3 sm:px-4 py-3 border-2 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#5C6B4A]/20 focus:border-[#5C6B4A] transition-all text-sm"
               style={{ 
-                borderColor: '#E8EBE3',
+                borderColor: '#D1D5C8',
                 color: '#4A4F45',
               }}
               required
@@ -104,9 +104,9 @@ export default function DateRangePicker({
               value={end}
               onChange={(e) => setEnd(e.target.value)}
               min={minEndDate}
-              className="w-full px-3 sm:px-4 py-3 border rounded-xl bg-background focus:outline-none focus:ring-2 transition-all text-sm"
+              className="w-full px-3 sm:px-4 py-3 border-2 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#5C6B4A]/20 focus:border-[#5C6B4A] transition-all text-sm"
               style={{ 
-                borderColor: '#E8EBE3',
+                borderColor: '#D1D5C8',
                 color: '#4A4F45',
               }}
               required

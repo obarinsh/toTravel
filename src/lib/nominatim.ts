@@ -17,7 +17,7 @@ async function rateLimitedFetch(url: string): Promise<Response> {
   
   return fetch(url, {
     headers: {
-      'User-Agent': 'ToTravel App (personal project)',
+      'User-Agent': 'LaLuz App (personal project)',
     },
   });
 }

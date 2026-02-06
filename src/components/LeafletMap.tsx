@@ -6,10 +6,26 @@ import L from 'leaflet';
 import { Attraction, Coordinates } from '@/types';
 
 // Fix for default marker icons in Next.js
-const createNumberedIcon = (number: number, isHotel = false) => {
+const createNumberedIcon = (number: number, isHotel = false, isUnassigned = false) => {
+  const bgColor = isHotel ? '#EF4444' : isUnassigned ? '#E4B84A' : '#5C6B4A';
+  const label = isHotel ? 'H' : isUnassigned ? '?' : number;
+  
   return L.divIcon({
     className: 'custom-marker-container',
-    html: `<div class="custom-marker ${isHotel ? 'hotel' : ''}">${isHotel ? 'H' : number}</div>`,
+    html: `<div style="
+      background: ${bgColor};
+      color: white;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 500;
+      font-size: 12px;
+      border: 2px solid white;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    ">${label}</div>`,
     iconSize: [28, 28],
     iconAnchor: [14, 14],
   });
@@ -20,7 +36,11 @@ interface MapBoundsUpdaterProps {
   hotelLocation?: Coordinates;
 }
 
-function MapBoundsUpdater({ attractions, hotelLocation }: MapBoundsUpdaterProps) {
+interface MapBoundsUpdaterFullProps extends MapBoundsUpdaterProps {
+  center?: Coordinates;
+}
+
+function MapBoundsUpdater({ attractions, hotelLocation, center }: MapBoundsUpdaterFullProps) {
   const map = useMap();
 
   useEffect(() => {
@@ -36,8 +56,16 @@ function MapBoundsUpdater({ attractions, hotelLocation }: MapBoundsUpdaterProps)
     if (points.length > 0) {
       const bounds = L.latLngBounds(points);
       map.fitBounds(bounds, { padding: [50, 50] });
+    } else if (center) {
+      // If no attractions, center on the destination
+      map.setView([center.lat, center.lng], 13);
     }
-  }, [attractions, hotelLocation, map]);
+    
+    // Invalidate size to ensure map renders correctly
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 100);
+  }, [attractions, hotelLocation, center, map]);
 
   return null;
 }
@@ -106,7 +134,7 @@ export default function LeafletMap({
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
 
-      <MapBoundsUpdater attractions={attractions} hotelLocation={hotelLocation} />
+      <MapBoundsUpdater attractions={attractions} hotelLocation={hotelLocation} center={center} />
       <MapClickHandler onMapClick={onMapClick} isEnabled={isSelectingHotel} />
 
       {/* Hotel marker */}
@@ -122,7 +150,7 @@ export default function LeafletMap({
         <Marker
           key={attraction.id}
           position={[attraction.coordinates.lat, attraction.coordinates.lng]}
-          icon={createNumberedIcon(attraction.order)}
+          icon={createNumberedIcon(attraction.order, false, !attraction.day)}
           eventHandlers={{
             click: () => onMarkerClick?.(attraction.id),
           }}

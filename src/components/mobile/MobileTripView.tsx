@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'motion/react';
-import { MoreHorizontal, Calendar, MapPin, Map, Utensils, Sparkles } from 'lucide-react';
-import { Trip, Attraction, Coordinates } from '@/types';
+import { motion, AnimatePresence } from 'motion/react';
+import { MoreHorizontal, Calendar, MapPin, Map, Utensils, Sparkles, Pencil, X, Check } from 'lucide-react';
+import { Trip, Attraction } from '@/types';
 import { calculateDays, formatDate } from '@/components/DateRangePicker';
 import MobileItineraryTab from './MobileItineraryTab';
 import MobileNearbyTab from './MobileNearbyTab';
@@ -20,6 +20,7 @@ interface MobileTripViewProps {
   onAttractionsChange: (attractions: Attraction[]) => void;
   onMenuOpen: () => void;
   onEditDates: () => void;
+  onNameChange?: (name: string) => void;
   onGenerateMore?: () => Promise<void>;
   isGenerating?: boolean;
 }
@@ -29,12 +30,15 @@ export default function MobileTripView({
   onAttractionsChange,
   onMenuOpen,
   onEditDates,
+  onNameChange,
   onGenerateMore,
   isGenerating,
 }: MobileTripViewProps) {
   const [activeTab, setActiveTab] = useState<MobileTabType>('itinerary');
   const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
   const [addToDay, setAddToDay] = useState<number | null>(null);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState(trip.name || '');
 
   const { attractions, start_date, end_date } = trip;
   const numDays = start_date && end_date ? calculateDays(start_date, end_date) : 0;
@@ -92,15 +96,45 @@ export default function MobileTripView({
     onAttractionsChange([...attractions, newAttraction]);
   };
 
+  const handleSaveName = () => {
+    if (onNameChange) {
+      onNameChange(editedName.trim() || trip.destination);
+    }
+    setIsEditingName(false);
+  };
+
+  const handleCancelEditName = () => {
+    setEditedName(trip.name || '');
+    setIsEditingName(false);
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-background">
       {/* Header */}
       <div className="px-4 pt-20 pb-3">
         <div className="flex items-start justify-between">
-          <div>
-            <h1 className="font-heading text-xl font-semibold text-foreground">
-              {trip.name || trip.destination}
-            </h1>
+          <div className="flex-1 min-w-0 pr-2">
+            {/* Trip Name - Tappable to edit */}
+            <button
+              onClick={() => setIsEditingName(true)}
+              className="flex items-center gap-2 group text-left"
+            >
+              <h1 className="font-heading text-xl font-semibold text-foreground truncate">
+                {trip.name || trip.destination}
+              </h1>
+              <Pencil 
+                size={14} 
+                className="text-muted opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" 
+              />
+            </button>
+            {/* Destination (shown if name is different) */}
+            {trip.name && trip.name !== trip.destination && (
+              <p className="text-xs text-muted mt-0.5 flex items-center gap-1">
+                <MapPin size={10} />
+                {trip.destination}
+              </p>
+            )}
+            {/* Date and stats */}
             <p className="text-sm text-muted mt-0.5">
               <button 
                 onClick={onEditDates}
@@ -113,7 +147,7 @@ export default function MobileTripView({
           </div>
           <button
             onClick={onMenuOpen}
-            className="p-2 -mr-2 rounded-full hover:bg-gray-100 transition-colors"
+            className="p-2 -mr-2 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0"
           >
             <MoreHorizontal size={20} className="text-muted" />
           </button>
@@ -233,6 +267,96 @@ export default function MobileTripView({
         onGenerateMore={onGenerateMore}
         isGenerating={isGenerating}
       />
+
+      {/* Edit Name Sheet */}
+      <AnimatePresence>
+        {isEditingName && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={handleCancelEditName}
+              className="fixed inset-0 bg-black/40 z-50"
+            />
+
+            {/* Sheet */}
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl z-50 shadow-2xl"
+              style={{ paddingBottom: 'max(24px, env(safe-area-inset-bottom))' }}
+            >
+              {/* Handle */}
+              <div className="flex justify-center pt-3 pb-2">
+                <div className="w-10 h-1 rounded-full bg-gray-300" />
+              </div>
+
+              {/* Header */}
+              <div className="flex items-center justify-between px-5 pb-4">
+                <h2 className="font-heading text-lg font-semibold text-foreground">
+                  Edit Trip Name
+                </h2>
+                <button
+                  onClick={handleCancelEditName}
+                  className="p-2 -mr-2 rounded-full hover:bg-gray-100 transition-colors"
+                >
+                  <X size={20} className="text-muted" />
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="px-5 pb-4">
+                {/* Destination info */}
+                <p className="text-xs text-muted mb-3 flex items-center gap-1">
+                  <MapPin size={12} />
+                  Destination: {trip.destination}
+                </p>
+
+                {/* Name input */}
+                <input
+                  type="text"
+                  value={editedName}
+                  onChange={(e) => setEditedName(e.target.value)}
+                  placeholder={trip.destination}
+                  className="w-full px-4 py-3 border-2 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#5C6B4A]/20 focus:border-[#5C6B4A] transition-all text-base"
+                  style={{ borderColor: '#D1D5C8', color: '#4A4F45' }}
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSaveName();
+                    if (e.key === 'Escape') handleCancelEditName();
+                  }}
+                />
+                <p className="text-xs text-muted mt-2">
+                  Leave empty to use the destination name
+                </p>
+
+                {/* Buttons */}
+                <div className="flex gap-3 mt-4">
+                  <button
+                    onClick={handleCancelEditName}
+                    className="flex-1 px-4 py-3 rounded-full text-sm font-medium transition-colors border-2"
+                    style={{ borderColor: '#D1D5C8', color: '#8B9082' }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveName}
+                    className="flex-1 px-4 py-3 rounded-full text-sm font-medium text-white transition-all hover:opacity-90 flex items-center justify-center gap-2"
+                    style={{ backgroundColor: '#5C6B4A' }}
+                  >
+                    <Check size={16} />
+                    Save
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

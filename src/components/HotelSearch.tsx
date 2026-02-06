@@ -73,7 +73,7 @@ export default function HotelSearch({ destination, onSelect, onCancel, isLoading
           
           const response = await fetch(
             `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=5&addressdetails=1`,
-            { headers: { 'User-Agent': 'ToTravel App' } }
+            { headers: { 'User-Agent': 'LaLuz App' } }
           );
           
           if (response.ok) {

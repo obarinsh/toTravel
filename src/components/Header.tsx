@@ -2,9 +2,12 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { User, LogOut, ChevronDown } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import logoWhite from '@/img/luz-logo-white.svg';
+import logo2 from '@/img/luz-logo2.svg';
 
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
@@ -67,10 +70,14 @@ export default function Header() {
       <div className="flex items-center justify-between">
         <Link 
           href="/" 
-          className={`text-sm font-medium transition-colors ${textClass}`}
-          style={textStyle}
+          className="transition-opacity hover:opacity-80"
         >
-          toTravel
+          <Image
+            src={isLandingPage && !scrolled ? logoWhite : logo2}
+            alt="LaLúz"
+            height={28}
+            className="h-7 w-auto"
+          />
         </Link>
         <div className="flex items-center gap-6 md:gap-8">
           {!isLoading && (

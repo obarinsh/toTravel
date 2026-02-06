@@ -173,7 +173,7 @@ export function exportTripToPDF({ trip, startDate, endDate }: ExportOptions) {
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(150, 150, 150);
     doc.text(
-      `Created with toTravel • Page ${i} of ${pageCount}`,
+      `Created with LaLúz • Page ${i} of ${pageCount}`,
       pageWidth / 2,
       doc.internal.pageSize.getHeight() - 10,
       { align: 'center' }

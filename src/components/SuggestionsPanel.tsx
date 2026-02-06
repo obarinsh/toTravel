@@ -167,7 +167,7 @@ export default function SuggestionsPanel({
                     onClick={() => handleGenerateMore(activeFilter === 'All' ? undefined : activeFilter.toLowerCase())}
                     disabled={isGenerating}
                     className="w-full mt-3 py-2.5 flex items-center justify-center gap-2 rounded-xl border-2 border-dashed text-xs font-medium transition-colors hover:bg-gray-50 disabled:opacity-50"
-                    style={{ borderColor: '#8B5CF6', color: '#8B5CF6' }}
+                    style={{ borderColor: '#5C6B4A', color: '#5C6B4A' }}
                   >
                     {isGenerating && generatingCategory ? (
                       <>

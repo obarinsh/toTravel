@@ -5,7 +5,9 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'motion/react';
 import { Mail, Lock, Eye, EyeOff, User, Loader2 } from 'lucide-react';
+import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
+import logo2 from '@/img/luz-logo2.svg';
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -51,9 +53,7 @@ export default function SignUpPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-block mb-6">
-            <span className="font-heading text-2xl font-semibold" style={{ color: '#2C2C2A' }}>
-              ToTravel
-            </span>
+            <Image src={logo2} alt="LaLúz" height={36} className="h-9 w-auto" />
           </Link>
           <h1 className="font-heading text-3xl font-semibold mb-2" style={{ color: '#2C2C2A' }}>
             Create an account

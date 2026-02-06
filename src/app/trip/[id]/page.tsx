@@ -125,7 +125,13 @@ export default function TripPage() {
         }),
       });
 
-      const { attractions: newAttractions } = await response.json();
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to generate attractions');
+      }
+
+      const newAttractions = data.attractions;
       
       if (newAttractions && newAttractions.length > 0) {
         // Add new attractions with proper order numbers
@@ -140,10 +146,13 @@ export default function TripPage() {
         const updatedAttractions = [...trip.attractions, ...attractionsToAdd];
         setTrip({ ...trip, attractions: updatedAttractions });
         saveTrip({ attractions: updatedAttractions });
+      } else {
+        alert('No new places found. Try a different category or destination.');
       }
     } catch (error) {
       console.error('Error generating more attractions:', error);
-      alert('Failed to generate more places. Please try again.');
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      alert(`Failed to generate more places: ${message}`);
     } finally {
       setIsGeneratingMore(false);
     }
@@ -208,7 +217,7 @@ export default function TripPage() {
     try {
       const response = await fetch(
         `https://nominatim.openstreetmap.org/reverse?format=json&lat=${coordinates.lat}&lon=${coordinates.lng}&zoom=18&addressdetails=1`,
-        { headers: { 'User-Agent': 'ToTravel App' } }
+        { headers: { 'User-Agent': 'LaLuz App' } }
       );
       if (response.ok) {
         const data = await response.json();
@@ -292,6 +301,11 @@ export default function TripPage() {
           onAttractionsChange={handleAttractionsChange}
           onMenuOpen={() => setIsMenuOpen(true)}
           onEditDates={() => setIsEditingDates(true)}
+          onNameChange={(name) => {
+            const newName = name.trim() || undefined;
+            setTrip({ ...trip, name: newName });
+            saveTrip({ name: newName });
+          }}
           onGenerateMore={handleGenerateMore}
           isGenerating={isGeneratingMore}
         />
@@ -396,8 +410,11 @@ export default function TripPage() {
                 }
               }}
             />
-            <div className="relative w-full bg-white rounded-t-3xl px-5 pt-4 pb-8 safe-area-pb z-[100000]">
-              <div className="flex justify-center mb-2">
+            <div 
+              className="relative w-full bg-white rounded-t-3xl px-5 pt-4 z-[100000] shadow-2xl"
+              style={{ paddingBottom: 'max(32px, env(safe-area-inset-bottom))' }}
+            >
+              <div className="flex justify-center mb-4">
                 <div className="w-10 h-1 rounded-full bg-gray-300" />
               </div>
               <DateRangePicker

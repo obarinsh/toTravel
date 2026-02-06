@@ -48,7 +48,7 @@ export async function generateAttractions(
 
   const numAttractions = category && category.toLowerCase() !== 'all' ? 5 : 10;
 
-  const prompt = `You are a travel expert with precise geographic knowledge. Generate ${numAttractions} must-see attractions for tourists visiting ${destination}.${categoryFilter}
+  const prompt = `You are a travel expert with precise geographic knowledge. Generate EXACTLY ${numAttractions} must-see attractions for tourists visiting ${destination}.${categoryFilter}
 
 For each attraction, provide:
 - name: The official name of the attraction IN ENGLISH (use the common English name, not the local language)
@@ -58,35 +58,48 @@ For each attraction, provide:
 - longitude: The precise longitude coordinate of the attraction (decimal format, e.g., 34.7818)
 - image_search_term: A specific search term to find an image of this place (e.g., "Eiffel Tower Paris", "Louvre Museum exterior")
 
-IMPORTANT: Provide accurate GPS coordinates for each attraction. These will be used to place markers on a map.${excludeSection}
+IMPORTANT: 
+1. You MUST return EXACTLY ${numAttractions} different attractions in the array.
+2. Provide accurate GPS coordinates for each attraction. These will be used to place markers on a map.${excludeSection}
 
-Return ONLY a JSON object in this exact format:
-{
-  "attractions": [
-    {
-      "name": "Attraction Name in English",
-      "description": "Brief description in English...",
-      "category": "landmark",
-      "latitude": 32.0853,
-      "longitude": 34.7818,
-      "image_search_term": "Attraction Name City"
-    }
-  ]
-}`;
+Return ONLY a valid JSON object with an "attractions" array containing exactly ${numAttractions} objects.`;
 
-  const result = await geminiModel.generateContent(prompt);
-  const response = result.response.text();
-  
   try {
+    const result = await geminiModel.generateContent(prompt);
+    const response = result.response.text();
+    
+    console.log('Gemini raw response length:', response.length);
+    
     // Try to extract JSON from the response (it might be wrapped in markdown code blocks)
     const jsonMatch = response.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
+      const parsed = JSON.parse(jsonMatch[0]);
+      if (!parsed.attractions || !Array.isArray(parsed.attractions)) {
+        console.error('Invalid attractions structure:', parsed);
+        throw new Error('Invalid response structure from Gemini');
+      }
+      return parsed;
     }
-    return JSON.parse(response);
+    
+    const parsed = JSON.parse(response);
+    if (!parsed.attractions || !Array.isArray(parsed.attractions)) {
+      console.error('Invalid attractions structure:', parsed);
+      throw new Error('Invalid response structure from Gemini');
+    }
+    return parsed;
   } catch (e) {
-    console.error('Failed to parse response:', response);
-    throw new Error('Failed to parse Gemini response');
+    const error = e as Error;
+    console.error('Gemini API error:', error.message);
+    
+    // Check for specific API errors
+    if (error.message?.includes('429') || error.message?.includes('quota') || error.message?.includes('rate')) {
+      throw new Error('API rate limit reached. Please wait a moment and try again.');
+    }
+    if (error.message?.includes('API key')) {
+      throw new Error('Invalid API key. Please check your Gemini API configuration.');
+    }
+    
+    throw new Error(`Failed to generate attractions: ${error.message}`);
   }
 }
 

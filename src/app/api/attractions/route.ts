@@ -14,10 +14,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    console.log('Generating attractions for:', destination, 'excluding:', excludeNames?.length || 0, 'places');
+
     // Generate attractions using Gemini (now includes coordinates and optional category filter)
-    const { attractions: rawAttractions } = await generateAttractions(destination, excludeNames, category);
+    const result = await generateAttractions(destination, excludeNames, category);
     
-    console.log('Gemini returned attractions:', JSON.stringify(rawAttractions, null, 2));
+    if (!result || !result.attractions) {
+      console.error('Invalid response from Gemini:', result);
+      return NextResponse.json(
+        { error: 'Invalid response from AI', attractions: [] },
+        { status: 200 }
+      );
+    }
+
+    const rawAttractions = result.attractions;
+    console.log('Gemini returned', rawAttractions.length, 'attractions');
 
     // Map Gemini response to our Attraction format
     const attractions: Attraction[] = rawAttractions.map((attr, i) => ({
@@ -36,8 +47,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ attractions });
   } catch (error) {
     console.error('Error generating attractions:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Failed to generate attractions' },
+      { error: `Failed to generate attractions: ${errorMessage}`, attractions: [] },
       { status: 500 }
     );
   }

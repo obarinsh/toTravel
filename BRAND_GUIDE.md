@@ -1,4 +1,4 @@
-# ToTravel Brand Style Guide
+# LaLúz Brand Style Guide
 
 ## 1. Brand Identity
 

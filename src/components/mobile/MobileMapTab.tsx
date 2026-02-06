@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { motion } from 'motion/react';
-import { Trip, Attraction } from '@/types';
+import { useState, useMemo, useEffect } from 'react';
+import { Trip } from '@/types';
 import MapWrapper from '@/components/MapWrapper';
 
 interface MobileMapTabProps {
@@ -33,9 +32,9 @@ export default function MobileMapTab({ trip, numDays }: MobileMapTabProps) {
   }, [attractions, numDays]);
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col" style={{ height: 'calc(100vh - 220px)' }}>
       {/* Day Filter */}
-      <div className="px-4 py-3">
+      <div className="px-4 py-3 flex-shrink-0">
         <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
           {/* All button */}
           <button
@@ -79,18 +78,19 @@ export default function MobileMapTab({ trip, numDays }: MobileMapTabProps) {
       </div>
 
       {/* Full Height Map */}
-      <div className="flex-1 mx-4 mb-4 rounded-2xl overflow-hidden">
+      <div className="flex-1 mx-4 mb-4 rounded-2xl overflow-hidden min-h-[300px]">
         <MapWrapper
           attractions={selectedDay === 0 
             ? attractions.filter((a) => !a.day) 
             : filteredAttractions
           }
           hotelLocation={hotel_location}
+          center={trip.destination_coordinates}
         />
       </div>
 
       {/* Legend */}
-      <div className="px-4 pb-4">
+      <div className="px-4 pb-4 flex-shrink-0">
         <div className="flex items-center justify-center gap-4 text-xs text-muted">
           <div className="flex items-center gap-1.5">
             <div 

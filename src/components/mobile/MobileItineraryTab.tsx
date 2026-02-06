@@ -7,7 +7,7 @@ import { Trip, Attraction, Coordinates } from '@/types';
 import { getDayDate } from '@/components/DateRangePicker';
 import { getDistanceInfo } from '@/lib/distance';
 import PlaceModal from '@/components/PlaceModal';
-import Image from 'next/image';
+import AttractionImage from '@/components/AttractionImage';
 
 interface MobileItineraryTabProps {
   trip: Trip;
@@ -175,23 +175,12 @@ function AttractionRow({
       </div>
       
       {/* Image */}
-      {attraction.photo_url ? (
-        <div className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
-          <Image
-            src={attraction.photo_url}
-            alt={attraction.name}
-            fill
-            className="object-cover"
-          />
-        </div>
-      ) : (
-        <div 
-          className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0"
-          style={{ backgroundColor: 'rgba(92, 107, 74, 0.1)' }}
-        >
-          <MapPin size={16} style={{ color: '#5C6B4A' }} />
-        </div>
-      )}
+      <div className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
+        <AttractionImage
+          photoUrl={attraction.photo_url}
+          name={attraction.name}
+        />
+      </div>
       
       {/* Name */}
       <div className="flex-1 min-w-0">

@@ -17,7 +17,7 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "ToTravel - Plan Your Perfect Trip",
+  title: "LaLúz - Plan Your Perfect Trip",
   description: "AI-powered trip planner with interactive maps and drag-and-drop itinerary",
 };
 
@@ -28,7 +28,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="light" style={{ colorScheme: 'light' }}>
-      <head>
+      <head >
+      <meta name="apple-mobile-web-app-title" content="Lúz" />
         <meta name="color-scheme" content="light only" />
         <link
           rel="stylesheet"
@@ -51,7 +52,7 @@ export default function RootLayout({
           {/* Minimal Footer */}
           <footer className="py-4 px-6">
             <div className="flex items-center justify-center">
-              <span className="text-xs text-mist">© 2025 toTravel</span>
+              <span className="text-xs text-mist">© 2025 LaLúz</span>
             </div>
           </footer>
         </AuthProvider>

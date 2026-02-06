@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, MapPin, Plus, Check, Info, Landmark, Building2, Trees, Church, PartyPopper, UtensilsCrossed, ShoppingBag, Sparkles, Loader2 } from 'lucide-react';
 import { Attraction, AttractionCategory } from '@/types';
 import { getDayDate } from '@/components/DateRangePicker';
-import Image from 'next/image';
+import AttractionImage from '@/components/AttractionImage';
 import PlaceModal from '@/components/PlaceModal';
 
 const categoryConfig: Record<AttractionCategory, { label: string; icon: React.ElementType; color: string }> = {
@@ -125,7 +125,7 @@ export default function AddPlacesSheet({
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl z-50 max-h-[85vh] flex flex-col"
+            className="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl z-50 max-h-[85vh] flex flex-col shadow-2xl"
           >
             {/* Handle */}
             <div className="flex justify-center pt-3 pb-2">
@@ -247,23 +247,12 @@ export default function AddPlacesSheet({
                         className="flex items-center gap-3 flex-1 min-w-0 text-left"
                       >
                         {/* Image */}
-                        {attraction.photo_url ? (
-                          <div className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
-                            <Image
-                              src={attraction.photo_url}
-                              alt={attraction.name}
-                              fill
-                              className="object-cover"
-                            />
-                          </div>
-                        ) : (
-                          <div 
-                            className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0"
-                            style={{ backgroundColor: 'rgba(92, 107, 74, 0.1)' }}
-                          >
-                            <MapPin size={16} style={{ color: '#5C6B4A' }} />
-                          </div>
-                        )}
+                        <div className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
+                          <AttractionImage
+                            photoUrl={attraction.photo_url}
+                            name={attraction.name}
+                          />
+                        </div>
                         
                         {/* Name and Category */}
                         <div className="flex-1 min-w-0">
@@ -303,10 +292,10 @@ export default function AddPlacesSheet({
               {/* Generate More Button */}
               {onGenerateMore && (
                 <button
-                  onClick={onGenerateMore}
+                  onClick={() => onGenerateMore()}
                   disabled={isGenerating}
                   className="w-full mt-4 py-3 flex items-center justify-center gap-2 rounded-xl border-2 border-dashed text-sm font-medium transition-colors hover:bg-gray-50 disabled:opacity-50"
-                  style={{ borderColor: '#8B5CF6', color: '#8B5CF6' }}
+                  style={{ borderColor: '#5C6B4A', color: '#5C6B4A' }}
                 >
                   {isGenerating ? (
                     <>
@@ -325,12 +314,15 @@ export default function AddPlacesSheet({
 
             {/* Footer with Add Button */}
             {unassignedAttractions.length > 0 && (
-              <div className="p-5 border-t border-border safe-area-pb">
+              <div 
+                className="p-5 border-t border-gray-200 bg-white"
+                style={{ paddingBottom: 'max(20px, env(safe-area-inset-bottom))' }}
+              >
                 <button
                   onClick={handleAssign}
                   disabled={!selectedAttractionId || !selectedDay}
-                  className="w-full py-3.5 rounded-full text-sm font-medium text-white transition-all hover:opacity-90 disabled:opacity-50"
-                  style={{ backgroundColor: '#5C6B4A' }}
+                  className="w-full py-3.5 rounded-full text-sm font-medium text-white transition-all hover:opacity-90 disabled:opacity-50 disabled:bg-gray-300"
+                  style={{ backgroundColor: selectedAttractionId && selectedDay ? '#5C6B4A' : undefined }}
                 >
                   {selectedDay ? (
                     <>Add to Day {selectedDay}</>
