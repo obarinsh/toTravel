@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, MapPin, Plus, Check, Info, Landmark, Building2, Trees, Church, PartyPopper, UtensilsCrossed, ShoppingBag, Sparkles, Loader2 } from 'lucide-react';
+import { X, MapPin, Check, Info, Landmark, Building2, Trees, Church, PartyPopper, UtensilsCrossed, ShoppingBag, Sparkles, Loader2 } from 'lucide-react';
 import { Attraction, AttractionCategory } from '@/types';
 import { getDayDate } from '@/components/DateRangePicker';
 import AttractionImage from '@/components/AttractionImage';

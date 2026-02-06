@@ -5,7 +5,7 @@ import { Attraction } from '@/types';
 
 export async function POST(request: NextRequest) {
   try {
-    const { destination, destinationCoordinates, excludeNames, category } = await request.json();
+    const { destination, excludeNames, category } = await request.json();
 
     if (!destination) {
       return NextResponse.json(

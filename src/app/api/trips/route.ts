@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient, getServerUser } from '@/lib/supabase-server';
-import { Trip } from '@/types';
 
 // GET all trips or single trip by id
 export async function GET(request: NextRequest) {

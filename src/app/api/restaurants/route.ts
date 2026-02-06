@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
           const detailsResponse = await fetch(detailsUrl.toString());
           const detailsData = await detailsResponse.json();
           details = detailsData.result || {};
-        } catch (e) {
+        } catch {
           // Ignore details errors
         }
 

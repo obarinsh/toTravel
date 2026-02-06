@@ -3,10 +3,10 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { motion } from 'motion/react';
-import { Map, Utensils, Sparkles, Loader2, Download, Share2, MoreVertical, Pencil, Check, X, MapPin, Building2 } from 'lucide-react';
+import { Map, Utensils, Sparkles, Loader2, Download, Share2, MoreVertical, Pencil, Check, X, Building2 } from 'lucide-react';
 import { Trip, Attraction, Coordinates } from '@/types';
 import ItineraryView from '@/components/ItineraryView';
-import DateRangePicker, { calculateDays, formatDate } from '@/components/DateRangePicker';
+import DateRangePicker, { formatDate } from '@/components/DateRangePicker';
 import FoodTab from '@/components/FoodTab';
 import ActivitiesTab from '@/components/ActivitiesTab';
 import NearbyTab from '@/components/NearbyTab';
@@ -23,7 +23,7 @@ export default function TripPage() {
   const [trip, setTrip] = useState<Trip | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedAttractionId, setSelectedAttractionId] = useState<string | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
+  const [, setIsSaving] = useState(false);
   const [hotelSearchMode, setHotelSearchMode] = useState<'none' | 'search' | 'click'>('none');
   const [isEditingDates, setIsEditingDates] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('route');

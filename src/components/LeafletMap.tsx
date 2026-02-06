@@ -96,7 +96,6 @@ export default function LeafletMap({
   attractions,
   hotelLocation,
   center = { lat: 48.8566, lng: 2.3522 },
-  selectedAttractionId,
   onMarkerClick,
   onMapClick,
   isSelectingHotel = false,

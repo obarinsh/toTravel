@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MapPin, ChevronDown, ChevronUp, Navigation, Car } from 'lucide-react';
-import { Attraction, Coordinates, Trip } from '@/types';
+import { Attraction, Trip } from '@/types';
 import { clusterAttractions, sortByDistanceFrom, Cluster } from '@/lib/clustering';
 import { formatDistance, formatDriveTime, estimateDriveTime } from '@/lib/distance';
 import MapWrapper from './MapWrapper';
@@ -164,7 +164,7 @@ function DistanceList({
 
       {/* Distance List */}
       <div className="max-h-[300px] overflow-y-auto">
-        {sortedAttractions.map((attraction, index) => {
+        {sortedAttractions.map((attraction) => {
           const driveTime = estimateDriveTime(attraction.distanceKm);
           return (
             <button

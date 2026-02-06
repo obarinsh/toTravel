@@ -253,7 +253,7 @@ export default function HotelSearch({ destination, onSelect, onCancel, isLoading
                     <Sparkles size={14} className="text-secondary flex-shrink-0" strokeWidth={1.5} />
                     <div className="flex-1">
                       <p className="text-sm font-body font-medium text-secondary">
-                        Find "{query}" with AI
+                        Find &quot;{query}&quot; with AI
                       </p>
                       <p className="text-xs text-muted font-body font-light">
                         Use AI to locate this place

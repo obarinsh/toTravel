@@ -15,7 +15,6 @@ interface SuggestionsPanelProps {
   attractions: Attraction[];
   selectedAttractionId?: string | null;
   onSelectAttraction: (id: string) => void;
-  onRemoveAttraction?: (id: string) => void;
   onGenerateMore?: (category?: string) => Promise<void>;
   isGenerating?: boolean;
 }
@@ -41,7 +40,6 @@ export default function SuggestionsPanel({
   attractions,
   selectedAttractionId,
   onSelectAttraction,
-  onRemoveAttraction,
   onGenerateMore,
   isGenerating,
 }: SuggestionsPanelProps) {

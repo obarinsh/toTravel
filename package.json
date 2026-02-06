@@ -19,7 +19,7 @@
     "leaflet": "^1.9.4",
     "lucide-react": "^0.563.0",
     "motion": "^12.29.2",
-    "next": "16.1.6",
+    "next": "15.1.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-leaflet": "^5.0.0"
@@ -30,8 +30,9 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@eslint/eslintrc": "^3",
     "eslint": "^9",
-    "eslint-config-next": "16.1.6",
+    "eslint-config-next": "15.1.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

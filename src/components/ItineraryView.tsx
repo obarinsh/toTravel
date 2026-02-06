@@ -23,7 +23,7 @@ import { Attraction, Coordinates, Trip } from '@/types';
 import SuggestionsPanel from './SuggestionsPanel';
 import DayCard from './DayCard';
 import { PlaceCardContent } from './PlaceCard';
-import { calculateDays, formatDate } from './DateRangePicker';
+import { calculateDays } from './DateRangePicker';
 import MapWrapper from './MapWrapper';
 import HotelSearch from './HotelSearch';
 
@@ -212,7 +212,6 @@ export default function ItineraryView({
           attractions={unassigned}
           selectedAttractionId={selectedAttractionId}
           onSelectAttraction={onSelectAttraction}
-          onRemoveAttraction={onRemoveAttraction}
           onGenerateMore={onGenerateMore}
           isGenerating={isGenerating}
         />

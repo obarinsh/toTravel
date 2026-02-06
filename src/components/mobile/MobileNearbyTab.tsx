@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronDown, ChevronRight, MapPin, Navigation, Plus, Car } from 'lucide-react';
-import { Trip, Attraction, Coordinates } from '@/types';
+import { Trip, Attraction } from '@/types';
 import { clusterAttractions, sortByDistanceFrom, Cluster } from '@/lib/clustering';
 import { formatDistance, estimateDriveTime, formatDriveTime } from '@/lib/distance';
 import MapWrapper from '@/components/MapWrapper';
@@ -122,7 +122,6 @@ function DistanceList({
   allAttractions,
   onClose,
   onAssignToDay,
-  numDays,
 }: DistanceListProps) {
   const sortedAttractions = useMemo(() => {
     const others = allAttractions.filter((a) => a.id !== referenceAttraction.id);

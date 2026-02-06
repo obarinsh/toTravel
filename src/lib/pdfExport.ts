@@ -1,5 +1,5 @@
 import { jsPDF } from 'jspdf';
-import { Trip, Attraction } from '@/types';
+import { Trip } from '@/types';
 
 interface ExportOptions {
   trip: Trip;
@@ -143,7 +143,7 @@ export function exportTripToPDF({ trip, startDate, endDate }: ExportOptions) {
     doc.text('Other Places to Visit', margin, yPos);
     yPos += 8;
 
-    unassigned.forEach((attraction, index) => {
+    unassigned.forEach((attraction) => {
       checkPageBreak(20);
 
       doc.setFontSize(11);
